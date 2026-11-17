@@ -1,0 +1,79 @@
+# ---------------------------------------------------------------------------
+# Agent / local tooling state (intentionally NOT in git)
+# ---------------------------------------------------------------------------
+# .agent holds the maintainer's context system: decision records, change logs,
+# file maps, competition strategy, scratchpad. It is local working memory.
+.agent/
+.omo/
+
+# ---------------------------------------------------------------------------
+# Secrets and machine-local config
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+.secrets/
+
+# ---------------------------------------------------------------------------
+# Organization raw data: never commit real chat logs, meeting notes or names
+# ---------------------------------------------------------------------------
+data/raw/
+data/tmp/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Node / frontend
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# ---------------------------------------------------------------------------
+# Build / runtime artifacts
+# ---------------------------------------------------------------------------
+*.log
+logs/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------------------------
+# Editors (keep the repo self-describing via .editorconfig instead)
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ---------------------------------------------------------------------------
+# Office temp files (team exchanges docs by mail/IM)
+# ---------------------------------------------------------------------------
+~$*
+*.tmp
