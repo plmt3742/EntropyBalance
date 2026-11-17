@@ -178,6 +178,6 @@ cascade    = orphaned 的后继闭包
 - Lengauer & Tarjan (1979) 支配点——有向图单点的正确工具。
 - Burt (1992) 结构洞；Cross et al. (2016) 协作过载。
 - Huang & Cummings (2011) 关键知识集中与团队绩效负相关。
-- Avelino et al. (2016) truck factor；Jabrayilzade et al. (2022) bus factor 实践；2026 年 bus-factor 形式化（最大冗余集 / 最小关键集）。
+- Avelino et al. (2016) truck factor；Jabrayilzade et al. (2022) bus factor 实践；2026 年 bus-factor 预印本（最大冗余集 / 最小关键集）。
 - Dunn (2010) 小网络指标的规模与密度敏感性。
 - Edgerton et al. (2022) 移除中心成员的小团队实验。
