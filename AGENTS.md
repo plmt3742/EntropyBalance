@@ -33,6 +33,7 @@
 | 原始数据 | `data/raw/`（永不提交） |
 
 细则见 `.agent/30-architecture/repo-layout.md`。不确定时先查 `.agent/50-file-map/FILES.md`，不要新开平行目录。
+团队协作与分工规则见 `docs/02-workflow.md`。
 
 ## 命令
 

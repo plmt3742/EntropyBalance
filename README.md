@@ -47,6 +47,7 @@ infra/               构建与部署
 |---|---|
 | [`docs/00-charter.md`](docs/00-charter.md) | 问题、目标、非目标、成功标准 |
 | [`docs/01-roadmap.md`](docs/01-roadmap.md) | 阶段与里程碑 |
+| [`docs/02-workflow.md`](docs/02-workflow.md) | 四人协作与 vibecoding 流程 |
 | [`docs/10-competition/4c-2027.md`](docs/10-competition/4c-2027.md) | 参赛赛道、材料、时间线 |
 | [`docs/20-architecture/analysis-model.md`](docs/20-architecture/analysis-model.md) | 图模型、指标、风险分类、仿真 |
 | [`docs/20-architecture/tech-stack.md`](docs/20-architecture/tech-stack.md) | 技术选型与放弃项 |
