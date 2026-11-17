@@ -12,6 +12,8 @@
 | `20-architecture/analysis-model.md` | 图模型、指标、风险分类、仿真方法 | 开发、评委 |
 | `20-architecture/tech-stack.md` | 选型、理由、放弃项、验证方式 | 开发 |
 | `30-research/research-topics.md` | 14 个调研课题点与验收标准 | 全队 |
+| `30-research/briefs/` | 16 份可委派的调研单（调研需求 + 交互需求） | 调研成员 |
+| `30-research/findings/` | 调研结论与证据（按单号归档） | 全队 |
 
 ## 写作约定
 

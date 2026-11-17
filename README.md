@@ -51,7 +51,8 @@ infra/               构建与部署
 | [`docs/10-competition/4c-2027.md`](docs/10-competition/4c-2027.md) | 参赛赛道、材料、时间线 |
 | [`docs/20-architecture/analysis-model.md`](docs/20-architecture/analysis-model.md) | 图模型、指标、风险分类、仿真 |
 | [`docs/20-architecture/tech-stack.md`](docs/20-architecture/tech-stack.md) | 技术选型与放弃项 |
-| [`docs/30-research/research-topics.md`](docs/30-research/research-topics.md) | 14 个调研课题点 |
+| [`docs/30-research/research-topics.md`](docs/30-research/research-topics.md) | 16 个调研课题点 |
+| [`docs/30-research/briefs/`](docs/30-research/briefs/README.md) | 可委派的调研单（调研需求 + 交互需求） |
 
 ## 数据与隐私
 
