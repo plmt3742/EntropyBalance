@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/plmt3742/EntropyBalance/packages/shared/extraction.schema.json",
+  "title": "EntropyBalance 抽取结果 v0.1",
+  "description": "从中文协作记录（会议纪要 / 群聊 / 任务描述）抽取的断言集合。每条断言必须携带原文证据；无法确定时填 status=missing/ambiguous，禁止猜测。B-04 产出，对应 R-03。字段语义见 docs/30-research/findings/B-04-extraction-ontology.md。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run", "records", "persons", "assertions", "skipped"],
+  "properties": {
+    "schema_version": {
+      "const": "0.1",
+      "description": "本文件格式版本。字段变更必须同步 packages/shared/README.md 与 B-05 标注规范。"
+    },
+    "run": { "$ref": "#/$defs/Run" },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Record" }
+    },
+    "persons": {
+      "type": "array",
+      "description": "本批次出现的人。只存代号，不存真名（AGENTS.md 硬规则）。",
+      "items": { "$ref": "#/$defs/Person" }
+    },
+    "assertions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Assertion" }
+    },
+    "skipped": {
+      "type": "array",
+      "description": "有意不抽取的片段，必须给理由。理由是可数的有限枚举，不是兜底分类（见文档 §4.6）。",
+      "items": { "$ref": "#/$defs/Skipped" }
+    }
+  },
+  "$defs": {
+    "Run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "prompt_version", "run_at", "offset_unit"],
+      "properties": {
+        "model": { "type": "string", "description": "形如 deepseek-chat；换模型必须换 run 记录，便于 B-05 对比。" },
+        "prompt_version": { "type": "string", "pattern": "^p\\d+\\.\\d+$" },
+        "run_at": { "type": "string", "format": "date-time" },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "offset_unit": {
+          "const": "unicode_code_point",
+          "description": "证据偏移按 Unicode 码位计数（Python 字符串索引）。JS 的 UTF-16 下标在含 emoji 时会偏 1，前端必须换算。"
+        },
+        "source": { "enum": ["llm", "human", "hybrid"] }
+      }
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "source_type", "text_length"],
+      "properties": {
+        "record_id": { "type": "string", "pattern": "^R-\\d{3}$" },
+        "source_type": {
+          "enum": ["meeting_note", "chat_log", "task_description", "email"]
+        },
+        "captured_at": {
+          "type": "string",
+          "description": "记录的采集时间（不是事件发生时间）。相对时间归一必须依赖它作为 anchor。",
+          "format": "date-time"
+        },
+        "participants": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^P\\d{2,3}$" },
+          "description": "在场人。用于判定『大家』的作用域，也用于判断某人是否可能知情。"
+        },
+        "locale": { "enum": ["zh-CN", "zh-TW", "mixed"] },
+        "text_length": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["person_id", "display", "identity_status"],
+      "properties": {
+        "person_id": { "type": "string", "pattern": "^P\\d{2,3}$" },
+        "display": { "type": "string", "description": "代号或化名，如 P01、老王(A)。" },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "原文中出现的称呼。别名合并由 R-05 负责，这里只记录，不在此处判定同一人。"
+        },
+        "identity_status": {
+          "enum": ["roster_confirmed", "inferred", "unresolved"],
+          "description": "roster_confirmed=与成员名单对上；inferred=靠上下文推测；unresolved=只有『他/那边』无法落人。"
+        }
+      }
+    },
+    "Assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assertion_id",
+        "record_id",
+        "type",
+        "statement",
+        "evidence",
+        "polarity",
+        "modality",
+        "graph_eligible",
+        "actors",
+        "time",
+        "confidence"
+      ],
+      "properties": {
+        "assertion_id": { "type": "string", "pattern": "^A-\\d{4}$" },
+        "record_id": { "type": "string", "pattern": "^R-\\d{3}$" },
+        "type": {
+          "enum": ["decision", "task", "commitment", "status_update", "discussion"],
+          "description": "五类。『闲聊』不是类型，是 skipped 的一种理由（见文档 §4.1）。"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 200,
+          "description": "归一化后的一句话，补全省略成分；不改写语义。原文放 evidence.quote。"
+        },
+        "evidence": { "$ref": "#/$defs/Evidence" },
+        "polarity": {
+          "enum": ["affirmative", "negated"],
+          "description": "『不需要做 X』是 negated 的 task，不能当成 affirmative。"
+        },
+        "modality": {
+          "enum": ["asserted", "hypothetical", "quoted", "joking", "reported"],
+          "description": "asserted=说话人自己断言；hypothetical=假设/条件句；quoted=引用他人；joking=玩笑；reported=转述。"
+        },
+        "graph_eligible": {
+          "type": "boolean",
+          "description": "是否允许进入分析图。modality≠asserted 或 polarity=negated 时默认 false，需人工复核才可置 true。"
+        },
+        "actors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Actor" },
+          "description": "本断言涉及的人及其角色。允许为空（例如大范围状态更新）。"
+        },
+        "time": { "$ref": "#/$defs/TimeRef" },
+        "task_state": {
+          "enum": ["proposed", "active", "done", "cancelled", null],
+          "description": "仅 type=task/commitment 使用；状态变更本身另记一条 status_update。"
+        },
+        "decision_state": {
+          "enum": ["proposed", "ratified", "reversed", "superseded", null],
+          "description": "仅 type=decision 使用。"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Dependency" }
+        },
+        "parent_task_id": {
+          "type": ["string", "null"],
+          "pattern": "^A-\\d{4}$",
+          "description": "父任务断言 id；用于任务层级。跨记录合并后指向合并主断言。"
+        },
+        "merged_into": {
+          "type": ["string", "null"],
+          "pattern": "^A-\\d{4}$",
+          "description": "被合并进哪条断言（R-06）。被合并者仍保留，不删除。"
+        },
+        "merge_key": {
+          "type": ["string", "null"],
+          "maxLength": 80,
+          "description": "粗聚类键：动作+对象+责任人口径+时间桶的规范化字符串，供 R-06 使用，不是唯一键。"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "标注只允许 0.3 / 0.6 / 0.9 三档（低/中/高），便于一致率计算与 bootstrap 重采样。"
+        },
+        "review": { "$ref": "#/$defs/Review" },
+        "supersedes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^A-\\d{4}$" },
+          "description": "本条取代了哪些旧断言（例如决定被推翻）。旧断言 decision_state 改为 superseded，不删除。"
+        }
+      }
+    },
+    "Actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "status"],
+      "properties": {
+        "role": {
+          "enum": ["owner", "contributor", "approver", "backup", "mentioned"],
+          "description": "owner=最终负责（每任务最多一个）；contributor=参与执行；approver=有权拍板；backup=可接手；mentioned=只是被提到，不构成参与，不得入图。"
+        },
+        "status": {
+          "enum": ["known", "ambiguous", "missing", "group"],
+          "description": "missing=确实没人认领（保留断言并进待认领队列）；group=『大家』；ambiguous=多候选。"
+        },
+        "persons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PersonCandidate" },
+          "description": "status=known 时恰好 1 个；ambiguous 时 ≥2 个并列，不强迫选一个；missing/group 时为空。"
+        },
+        "group_scope": {
+          "enum": ["team", "present", "unspecified", null],
+          "description": "仅 status=group：team=全员；present=在场者；unspecified=『大家』但范围不明。"
+        },
+        "source": {
+          "enum": ["explicit", "inferred", "self_committed", "volunteered", null],
+          "description": "归属来源。self_committed/volunteered 区分『承诺』与『被指派』；inferred 必须能指出推断依据。"
+        },
+        "note": { "type": ["string", "null"], "maxLength": 120 }
+      }
+    },
+    "PersonCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["person_id", "confidence"],
+      "properties": {
+        "person_id": { "type": "string", "pattern": "^P\\d{2,3}$" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "span_start", "span_end", "quote"],
+      "properties": {
+        "record_id": { "type": "string", "pattern": "^R-\\d{3}$" },
+        "span_start": { "type": "integer", "minimum": 0 },
+        "span_end": { "type": "integer", "minimum": 0 },
+        "quote": {
+          "type": "string",
+          "minLength": 2,
+          "description": "原文片段（逐字）。偏移可机器校验，quote 可人工核对，两者必须一致。"
+        }
+      }
+    },
+    "TimeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "kind"],
+      "properties": {
+        "raw": {
+          "type": "string",
+          "description": "原文时间表达，逐字保留。空串表示原文没有时间表达。"
+        },
+        "kind": {
+          "enum": ["absolute", "relative", "event_ref", "fuzzy", "none"],
+          "description": "absolute=2026-11-20；relative=下周五；event_ref=下次开会前；fuzzy=尽快/月底前；none=无时间。"
+        },
+        "start": { "type": ["string", "null"], "format": "date" },
+        "end": { "type": ["string", "null"], "format": "date" },
+        "granularity": {
+          "enum": ["day", "week", "month", "quarter", null],
+          "description": "归一后的时间粒度。无法确定时用 null，并在 unresolved_reason 说明原因。"
+        },
+        "anchor": {
+          "type": ["string", "null"],
+          "description": "相对时间的锚点来源，形如 R-003@2026-11-17；无锚点不得归一，只能留 unresolved_reason。"
+        },
+        "unresolved_reason": {
+          "enum": ["no_anchor", "ambiguous_ref", "vague_word", "conflict", null],
+          "description": "kind=fuzzy 且无法落到区间、或 event_ref 事件未定时的理由。禁止填『其他』。"
+        }
+      }
+    },
+    "Dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "kind", "strength", "evidence"],
+      "properties": {
+        "target_task_id": {
+          "type": ["string", "null"],
+          "pattern": "^A-\\d{4}$",
+          "description": "前置任务在库内的断言 id；库内还没有该任务时留 null。"
+        },
+        "target_label": {
+          "type": ["string", "null"],
+          "maxLength": 60,
+          "description": "前置对象的文字指称，如『评审会』『供应商报价』。与 target_task_id 至少填一个。"
+        },
+        "direction": {
+          "const": "depends_on",
+          "description": "方向只有一种写法：本断言 depends_on 目标。禁止存反向字段，避免两侧不一致。与 analysis-model 的 G_dep『u → v 表示 v 依赖 u』对应。"
+        },
+        "kind": {
+          "enum": ["precedence", "resource", "approval", "information"],
+          "description": "precedence=先后；resource=人手/预算/设备；approval=审批签字；information=等回复/等数据/等确认。"
+        },
+        "strength": {
+          "enum": ["hard", "soft"],
+          "description": "hard=没有它做不了，进 G_dep；soft=弱依赖，单独统计，不进硬依赖图（R-07）。"
+        },
+        "evidence": { "$ref": "#/$defs/Evidence" }
+      },
+      "anyOf": [
+        { "required": ["target_task_id"] },
+        { "required": ["target_label"] }
+      ]
+    },
+    "Review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["needs_human"],
+      "properties": {
+        "needs_human": {
+          "type": "boolean",
+          "description": "进入人工确认队列。低置信度、modality≠asserted、多候选 owner、依赖成环时必须为 true。"
+        },
+        "reason": {
+          "type": ["string", "null"],
+          "enum": [
+            "low_confidence",
+            "ambiguous_owner",
+            "missing_owner",
+            "negation_or_hypothetical",
+            "dependency_cycle",
+            "boundary_case",
+            null
+          ]
+        }
+      }
+    },
+    "Skipped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "span_start", "span_end", "quote", "reason"],
+      "properties": {
+        "record_id": { "type": "string", "pattern": "^R-\\d{3}$" },
+        "span_start": { "type": "integer", "minimum": 0 },
+        "span_end": { "type": "integer", "minimum": 0 },
+        "quote": { "type": "string", "minLength": 1 },
+        "reason": {
+          "enum": [
+            "chitchat",
+            "greeting",
+            "meta_instruction",
+            "duplicate",
+            "unverifiable_reference",
+            "no_assertion"
+          ],
+          "description": "chitchat=闲聊；greeting=寒暄；meta_instruction=流程性指令（如『看群公告』）；duplicate=同一断言重复出现；unverifiable_reference=指向库外无法核对的对象；no_assertion=有信息但不构成可行动断言。"
+        }
+      }
+    }
+  }
+}
