@@ -207,7 +207,10 @@ RULES = {
 def check_enums(sample: dict) -> list[str]:
     """expected 里的取值必须落在 schema 允许的枚举内。"""
     errs: list[str] = []
-    e = sample["expected"]
+    e = sample.get("expected")
+    if not e:
+        # 只有 candidates、尚未人工标注的记录：枚举校验等标注后再做
+        return errs
     for key, allowed in (
         ("type", ENUMS["type"]),
         ("polarity", ENUMS["polarity"]),
@@ -265,13 +268,14 @@ def check_cycle_groups(samples: list[dict]) -> list[str]:
     errs: list[str] = []
     by_record: dict[str, list[dict]] = {}
     for s in samples:
-        if "cycle_flagged" in s["expected"].get("must_hold", []):
+        exp = s.get("expected") or {}
+        if "cycle_flagged" in exp.get("must_hold", []):
             by_record.setdefault(s["record"]["record_id"], []).append(s)
     for record_id, group in by_record.items():
         if len(group) < 2:
             errs.append(f"{record_id}: 声称成环，但只有 {len(group)} 条断言，环至少两条边")
         for s in group:
-            deps = s["expected"].get("dependencies", [])
+            deps = (s.get("expected") or {}).get("dependencies", [])
             if not deps:
                 errs.append(f"{s['sample_id']}: 成环断言没有依赖边")
             for d in deps:
@@ -300,6 +304,9 @@ def check_expanded_schema(samples: list[dict]) -> list[str]:
     schema = load_schema(SCHEMA_PATH)
     errs: list[str] = []
     for i, s in enumerate(samples, start=1):
+        if not s.get("expected"):
+            # 尚未人工标注的记录（只有 candidates）不参与"简写能展开"检查
+            continue
         for err in check(mod.expand(s, i), schema["$defs"]["Assertion"], schema):
             errs.append(f"{s['sample_id']}: {err}")
     return errs
@@ -330,7 +337,7 @@ def main() -> int:
     for s in samples:
         sid, kind = s["sample_id"], s.get("kind", "sample")
         problems = check_enums(s) + check_origin(s)
-        for name in s["expected"].get("must_hold", []):
+        for name in (s.get("expected") or {}).get("must_hold", []):
             fn = RULES.get(name)
             if fn is None:
                 problems.append(f"未知规则 {name}")
