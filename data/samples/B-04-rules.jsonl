@@ -1,0 +1,10 @@
+{"card": 1, "cid": "R-109@2", "quote": "这样还要再比吗？", "pick": "b", "rule": "问句（即使带情绪、含隐含选项）记无断言；除非它明确指派了某人。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 2, "cid": "R-109@7", "quote": "能不能让一下我们", "pick": "b", "rule": "请求句不等同指派：没点名谁去做，记无断言。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 3, "cid": "R-110@1", "quote": "看看还能不能争取一下？", "pick": "a", "rule": "疑问语气的行动建议仍记讨论：它在推一个选项，但没指定人。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 4, "cid": "R-119@4", "quote": "都可以，我这么提是因为…", "pick": "a", "rule": "提供理由、亮立场的长句记讨论，不因语气软而降级为无断言。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 5, "cid": "R-110@0", "quote": "我这去问问田姐", "pick": "a", "rule": "第一人称当场自诺记承诺（优先于待办），owner=发言人。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 6, "cid": "R-105@5", "quote": "田姐她说下午试一下…", "pick": "a", "rule": "转述他人的自诺也记承诺，owner=被转述的人，note 写「转述」。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 7, "cid": "R-125@0", "quote": "@P06 你来作为对接人吧～", "pick": "a", "rule": "带语气词的指派仍记待办；语气轻不改变「有动作、有对象」这一事实。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 8, "cid": "R-101@1", "quote": "智慧教室…有可移动桌椅", "pick": "a", "rule": "纯事实罗列记无断言；不升级为状态更新（既无动作也无时间点）。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 9, "cid": "R-101@4", "quote": "[视频]", "pick": "b", "rule": "占位符统一记 skipped{no_assertion}，不单列「无法核实的引用」。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}
+{"card": 10, "cid": "E01", "quote": "张三李四都负责，谁有空谁弄", "pick": "a", "rule": "多责任人一律 ambiguous + 两人并列，禁止挑一个当 owner。", "decided_by": "0002", "decided_at": "2026-11-18", "mode": "written_decision_single_annotator"}

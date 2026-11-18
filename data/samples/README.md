@@ -12,6 +12,7 @@
 | `B-04-owner-labels.jsonl` | **人工**责任/执行角色标注 119 行（83 条责任 = accountable + 36 条执行 = executor），字段 `sample_id/cid/role/kind/persons` | 两轮人工标注（R1/R2 2026-11-18），结论见 findings §3.4.1 |
 | `B-04-dependency-labels.jsonl` | **人工**依赖标注 36 行（14 条有依赖），字段 `wait/depends_on_cid/depends_on_label/kind` | 第 3 轮人工标注（R3 2026-11-18），结论见 findings §3.5.1 |
 | `B-04-time-labels.jsonl` | **人工**时间标注 26 行（16 定到日期 / 9 口头语 / 1 只有时刻），字段 `message_index/choice/date/flag` | 第 4 轮人工标注（R4 2026-11-18），结论见 findings §3.6.1 |
+| `B-04-rules.jsonl` | **人工**规则决议 10 行（工作坊的替代方式），字段 `card/cid/quote/pick/rule/decided_by` | 见 findings §8.2；每条规则都落到 §3.x 或 schema 描述 |
 
 ## 计划内容
 
@@ -83,3 +84,4 @@
 | 2026-11-18 | 新增 `B-04-dependency-labels.jsonl`（36 条依赖），checker 增加 `check_dependency_labels` | 依赖是验收项之一；实测 12/14 指向记录之外，`precedence` 为 0 |
 | 2026-11-18 | 新增 `B-04-time-labels.jsonl`（26 句时间标注），checker 增加 `check_time_labels` | 时间归一是验收项；实测 9 条时间词不含日期，且同一句「下周日」出现两种读法 |
 | 2026-11-18 | schema v0.1.4：`TimeRef.week_rule` 锁死 `natural_week`；`B-04-time-labels.jsonl` 里 R-123 改判 `unknown` | 「下周」有两种读法，光写文档不管用，必须做成必填枚举 |
+| 2026-11-18 | 新增 `B-04-rules.jsonl`（10 条争议规则）；schema v0.1.5 明确占位符记 no_assertion | 工作坊未召开，规则改为单人书面决议（findings §8.2） |

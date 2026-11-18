@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "0.1.4",
+      "const": "0.1.5",
       "description": "本文件格式版本。字段变更必须同步 packages/shared/README.md 与 B-05 标注规范。"
     },
     "run": {
@@ -722,7 +722,7 @@
             "unverifiable_reference",
             "no_assertion"
           ],
-          "description": "chitchat=闲聊；greeting=寒暄；meta_instruction=流程性指令（如『看群公告』）；duplicate=同一断言重复出现；unverifiable_reference=指向库外无法核对的对象；no_assertion=有信息但不构成可行动断言。"
+          "description": "chitchat=闲聊；greeting=寒暄；meta_instruction=流程性指令（如『看群公告』）；duplicate=同一断言重复出现；unverifiable_reference=指向库外、但内容确实存在的对象（如『见附件』『那个文档』）；no_assertion=有信息但不构成可行动断言。v0.1.5 起（B-04 §8.2-9）：微信占位符『[图片]』『[视频]』『[聊天记录]』一律记 no_assertion，不记 unverifiable_reference。"
         }
       }
     }
