@@ -31,6 +31,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SAMPLES = ROOT / "data" / "samples" / "B-04-boundary-cases.jsonl"
 SCHEMA_PATH = ROOT / "packages" / "shared" / "extraction.schema.json"
 
+# 同目录的 b04_schema_lite 是零依赖校验器，供 check_expanded_schema() 使用
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 ENUMS = {
     "type": {"decision", "task", "commitment", "status_update", "discussion"},
     "polarity": {"affirmative", "negated"},
@@ -127,7 +130,10 @@ def rule_time_unresolved_reason(s: dict) -> None:
 def rule_cycle_flagged(s: dict) -> None:
     e = s["expected"]
     assert e.get("review_reason") == "dependency_cycle", "成环必须打 dependency_cycle 标记"
-    assert len(e.get("dependencies", [])) >= 2, "环至少需要两条依赖边"
+    # v0.1.1：direction 是常量 depends_on，一条断言只能表达一个方向，
+    # 所以环必然写成 ≥2 条断言；单条只需 ≥1 条边，成环这件事由
+    # check_cycle_groups() 在"同一记录内 ≥2 条"上强制。
+    assert len(e.get("dependencies", [])) >= 1, "成环的每条断言至少要有 1 条依赖边"
 
 
 def rule_quoted_or_unresolved_person_flagged(s: dict) -> None:
@@ -254,6 +260,51 @@ def check_schema_file() -> list[str]:
     return errs
 
 
+def check_cycle_groups(samples: list[dict]) -> list[str]:
+    """成环是图级属性：同一记录里必须至少有两条带依赖的断言才对得上。"""
+    errs: list[str] = []
+    by_record: dict[str, list[dict]] = {}
+    for s in samples:
+        if "cycle_flagged" in s["expected"].get("must_hold", []):
+            by_record.setdefault(s["record"]["record_id"], []).append(s)
+    for record_id, group in by_record.items():
+        if len(group) < 2:
+            errs.append(f"{record_id}: 声称成环，但只有 {len(group)} 条断言，环至少两条边")
+        for s in group:
+            deps = s["expected"].get("dependencies", [])
+            if not deps:
+                errs.append(f"{s['sample_id']}: 成环断言没有依赖边")
+            for d in deps:
+                if not (d.get("target_label") or d.get("target_task_id")):
+                    errs.append(f"{s['sample_id']}: 依赖边缺 target_label/target_task_id")
+    return errs
+
+
+def check_expanded_schema(samples: list[dict]) -> list[str]:
+    """把简写期望翻译成完整断言，再逐条过 schema。
+
+    v0.1 时这一步是空的——仓库里没有任何脚本用 schema 校验过实例，
+    "schema 能表达"只是口头结论。v0.1.1 起它成为验收的一部分。
+    """
+    import importlib.util
+
+    from b04_schema_lite import check, load_schema
+
+    path = ROOT / "scripts" / "expand-b04-expected.py"
+    spec = importlib.util.spec_from_file_location("b04_expand", path)
+    if spec is None or spec.loader is None:
+        return [f"无法加载 {path}"]
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    schema = load_schema(SCHEMA_PATH)
+    errs: list[str] = []
+    for i, s in enumerate(samples, start=1):
+        for err in check(mod.expand(s, i), schema["$defs"]["Assertion"], schema):
+            errs.append(f"{s['sample_id']}: {err}")
+    return errs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", type=Path, default=DEFAULT_SAMPLES)
@@ -267,6 +318,12 @@ def main() -> int:
 
     lines = [ln for ln in args.file.read_text(encoding="utf-8").splitlines() if ln.strip()]
     samples = [json.loads(ln) for ln in lines]
+
+    structural = check_cycle_groups(samples) + check_expanded_schema(samples)
+    if structural:
+        for e in structural:
+            print(f"[FAIL] schema 表达: {e}")
+        return 1
 
     rows: list[tuple[str, str, str]] = []
     failures = 0

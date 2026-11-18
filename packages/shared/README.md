@@ -24,3 +24,7 @@ npx openapi-typescript packages/shared/openapi.json -o packages/shared/api.d.ts
 - 不手写业务逻辑。
 - 生成文件不手工编辑；如需修改，改后端模型后重新生成。
 - schema 变更必须同步 `docs/30-research/research-topics.md` R-03 与提示词版本。
+- `extraction.schema.json` 改动后必须跑一遍：
+  `python scripts/check-b04-samples.py`（规则 + 展开后过 schema）与
+  `python scripts/expand-b04-expected.py --validate`。
+  校验器是 `scripts/b04_schema_lite.py`（零依赖子集实现，不引 `jsonschema`）。

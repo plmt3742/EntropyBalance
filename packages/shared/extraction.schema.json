@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/plmt3742/EntropyBalance/packages/shared/extraction.schema.json",
-  "title": "EntropyBalance 抽取结果 v0.1",
+  "title": "EntropyBalance 抽取结果 v0.1.1",
   "description": "从中文协作记录（会议纪要 / 群聊 / 任务描述）抽取的断言集合。每条断言必须携带原文证据；无法确定时填 status=missing/ambiguous，禁止猜测。B-04 产出，对应 R-03。字段语义见 docs/30-research/findings/B-04-extraction-ontology.md。",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "run", "records", "persons", "assertions", "skipped"],
   "properties": {
     "schema_version": {
-      "const": "0.1",
+      "const": "0.1.1",
       "description": "本文件格式版本。字段变更必须同步 packages/shared/README.md 与 B-05 标注规范。"
     },
     "run": { "$ref": "#/$defs/Run" },
@@ -52,7 +52,7 @@
     "Record": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["record_id", "source_type", "text_length"],
+      "required": ["record_id", "source_type", "text_length", "captured_at"],
       "properties": {
         "record_id": { "type": "string", "pattern": "^R-\\d{3}$" },
         "source_type": {
@@ -60,7 +60,7 @@
         },
         "captured_at": {
           "type": "string",
-          "description": "记录的采集时间（不是事件发生时间）。相对时间归一必须依赖它作为 anchor。",
+          "description": "记录的采集时间（不是事件发生时间）。v0.1.1 起必填：所有相对时间（下周/明天/月底）都以它为 anchor 归一，缺它则相对时间永远只能标 unresolved。",
           "format": "date-time"
         },
         "participants": {
@@ -177,6 +177,16 @@
           "items": { "type": "string", "pattern": "^A-\\d{4}$" },
           "description": "本条取代了哪些旧断言（例如决定被推翻）。旧断言 decision_state 改为 superseded，不删除。"
         }
+      },
+      "if": {
+        "properties": { "graph_eligible": { "const": true } },
+        "required": ["graph_eligible"]
+      },
+      "then": {
+        "properties": {
+          "actors": { "minItems": 1 }
+        },
+        "$comment": "要进分析图就必须留出责任人槽位：哪怕没人认领，也要有一条 status=missing 的 Actor。空 actors 只允许出现在不入图的断言上（如 E03 的否定任务）。"
       }
     },
     "Actor": {
@@ -195,7 +205,7 @@
         "persons": {
           "type": "array",
           "items": { "$ref": "#/$defs/PersonCandidate" },
-          "description": "status=known 时恰好 1 个；ambiguous 时 ≥2 个并列，不强迫选一个；missing/group 时为空。"
+          "description": "status=known 时恰好 1 个；ambiguous 时 ≥2 个并列，不强迫选一个；missing/group 时必须为空。v0.1.1 起由 allOf 强制，不再只是描述。"
         },
         "group_scope": {
           "enum": ["team", "present", "unspecified", null],
@@ -206,7 +216,21 @@
           "description": "归属来源。self_committed/volunteered 区分『承诺』与『被指派』；inferred 必须能指出推断依据。"
         },
         "note": { "type": ["string", "null"], "maxLength": 120 }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "known" } }, "required": ["status"] },
+          "then": { "properties": { "persons": { "minItems": 1, "maxItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "status": { "const": "ambiguous" } }, "required": ["status"] },
+          "then": { "properties": { "persons": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["missing", "group"] } }, "required": ["status"] },
+          "then": { "properties": { "persons": { "maxItems": 0 } } }
+        }
+      ]
     },
     "PersonCandidate": {
       "type": "object",
@@ -291,8 +315,14 @@
         "evidence": { "$ref": "#/$defs/Evidence" }
       },
       "anyOf": [
-        { "required": ["target_task_id"] },
-        { "required": ["target_label"] }
+        {
+          "required": ["target_task_id"],
+          "properties": { "target_task_id": { "type": "string", "pattern": "^A-\\d{4}$" } }
+        },
+        {
+          "required": ["target_label"],
+          "properties": { "target_label": { "type": "string", "minLength": 1 } }
+        }
       ]
     },
     "Review": {

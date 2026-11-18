@@ -6,7 +6,7 @@
 
 | 文件 | 内容 | 来源 |
 |---|---|---|
-| `B-04-boundary-cases.jsonl` | 10 条**构造的**极端案例（E01–E10），对应 B-04 任务单 §2.2-4 | 人工构造，`origin: constructed` |
+| `B-04-boundary-cases.jsonl` | 11 条**构造的**极端案例（E01–E10，其中 E07 拆成 E07-a/E07-b），对应 B-04 任务单 §2.2-4 | 人工构造，`origin: constructed` |
 | `B-04-real-records.jsonl` | 20 条**真实**记录（脱敏），对应 B-04 任务单 §2.2-1 | **尚未建立**，须由成员人工标注，`origin: redacted_real` |
 
 ## 计划内容
@@ -35,8 +35,21 @@
   `scripts/check-b04-samples.py` 会强制这一条：缺 `origin`、或两者错位，直接判失败。
 - **合成数据不得放在"真实记录"的位置上。** 需要合成数据做回归测试时，单独建文件并命名带 `synthetic`。
 
+## 简写与完整断言（v0.1.1）
+
+标注人只写**简写**：`{"type": "task", "actors": [{"role": "owner", "status": "known", "persons": ["P02"]}]}`。
+机器要的是**完整断言**：`persons` 是带置信度的对象数组、`review` 是对象、`time` 是对象。
+中间的翻译由 `scripts/expand-b04-expected.py` 负责，改规则只改那一个文件。
+
+三条固定约定：
+
+- 相对时间的锚点 = `record.captured_at`（必填）。「下周」按**自然周**算：周一起，区间记整周（2026-11-17 采集 → 11-23 至 11-29）。
+- 置信度按归属状态给：`known`=0.9 / `ambiguous`=0.6 / 指代不明或缺失=0.3。
+- 一条断言只表达一个依赖方向（`direction` 是常量 `depends_on`），所以成环必须拆成两条断言（见 E07-a / E07-b）。
+
 ## 变更记录
 
 | 日期 | 改动 | 原因 |
 |---|---|---|
+| 2026-11-18 | v0.1.1：E07 拆成 E07-a/E07-b（各 1 条依赖边）；E02/E04/E06/E08/E10 各分配独立 `record_id`（R-025～R-029），不再与他条共用；E06 的 `granularity` 改 `null` | `direction` 是常量，一条断言只能表达一个方向；共用 `record_id` 会让"同一记录"的成环/合并检查失真；`unknown` 不在枚举内，粒度定不了就该记 null |
 | 2026-11-18 | 删除 `B-04-annotation-samples.jsonl`；E01–E10 迁入 `B-04-boundary-cases.jsonl` 并标 `origin: constructed` | 原文件里 S01–S20 是合成记录，却被放在"20 条真实记录"的位置，违反任务单 §2.2-1 与团队规范 3.3；旧数据仍可从 commit `3dd3247` 取回，历史不改写 |

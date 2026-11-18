@@ -1,11 +1,11 @@
 # B-04 · 从中文记录中抽取哪些事实、字段边界如何界定
 
 - 调研人：张至顺 · 0002
-- 完成日期：2026-11-17（v0.3 修订：2026-11-18）
+- 完成日期：2026-11-17（v0.4 修订：2026-11-18）
 - 对应单子：B-04（P0 · 5 人日 · 建议 数据/抽取）
 - 状态：草稿（待队长评审）
-- 版本：v0.3
-- 用途与范围：确定抽取 schema v0.1 的字段与边界；**不含**抽取实现、提示词、评测协议（评测见 B-05）。
+- 版本：v0.4
+- 用途与范围：确定抽取 schema 的字段与边界；**不含**抽取实现、提示词、评测协议（评测见 B-05）。
 
 **变更记录**
 
@@ -14,6 +14,7 @@
 | v0.1 | 2026-11-17 | 初稿：结论、九个问题、字段表、十条边界、映射表 | 首版交付 |
 | v0.2 | 2026-11-18 | ①§2 重写：加"核实级别"列，9 条扩到 19 条，逐条摘原句/页码；②新增 §6.1"只写核实过的对照"；③§8 增两条、改两条；④版本号与变更记录 | 上一版 9 条来源里 8 条实际只到"题录级"，却按已核实使用，违反规范 3.3 |
 | v0.3 | 2026-11-18 | 删除合成的 20 条"真实记录"，边界案例迁到 `B-04-boundary-cases.jsonl` 并标 `origin: constructed`；§1-5、§5、§9、§10 与复现命令随之更新 | 合成数据不允许占"真实记录"的位置（任务单 §2.2-1、规范 3.3）|
+| v0.4 | 2026-11-18 | schema 升 v0.1.1：修 5 条虚设约束、`captured_at` 必填；E07 拆为 E07-a/E07-b；新增 `b04_schema_lite.py` 与 `expand-b04-expected.py`；§3.6 补三条时间约定；§5/§9/§10 更新 | 用 A0 实测发现"schema 写着约束但实例能钻过去"，且仓库里从没有脚本真的用 schema 校验过实例 |
 
 > 读法：§1 是结论，§3 是九个问题的逐个回答，§4 是字段表（写代码时查这里），§5 是十条最难的边界案例，§6 是和外部的换算表。不想读全文的话，读 §1 与 §5。
 
@@ -25,7 +26,7 @@
 2. **所有"说不清"的地方都不许猜，改用一个状态字段把它记下来，再进人工队列。** 具体是 `Actor.status`（known / ambiguous / missing / group）、`TimeRef.unresolved_reason`、`confidence` 三档、`review.needs_human`。这样错误是**可见的**，而不是被平均掉。
 3. **一句话可以同时是"事实"和"态度"**：`polarity`（肯定/否定）与 `modality`（断言/假设/引用/玩笑/转述）是两条独立轴。"不需要做 X"是 negated 的任务，不能当成"没有任务"删掉。
 4. **依赖只存一个方向**（本条 `depends_on` 目标），且必须能落到"前置、资源、审批、信息"四类之一——中文里的"等""走完""批了再说""回头问一下"分别落在这四类，混在一起就没法算关键路径。
-5. 交付物：`packages/shared/extraction.schema.json` v0.1 + `data/samples/B-04-boundary-cases.jsonl`（10 条边界案例，`origin: constructed`）+ `scripts/check-b04-samples.py`（17 条规则 + 来源守卫，当前 10/10 通过）。**20 条真实记录尚未产出**——原 v0.1 里的 20 条是我合成的，已于 2026-11-18 删除，见 §10。
+5. 交付物：`packages/shared/extraction.schema.json` v0.1.1 + `data/samples/B-04-boundary-cases.jsonl`（11 条边界案例，`origin: constructed`）+ 三个脚本（`check-b04-samples.py` 规则检查、`b04_schema_lite.py` 零依赖校验器、`expand-b04-expected.py` 简写→完整断言翻译）。**20 条真实记录尚未产出**——原 v0.1 里的 20 条是我合成的，已于 2026-11-18 删除，见 §10。
 
 ---
 
@@ -174,6 +175,12 @@
 
 三条铁律：①**不许猜日期**，猜出来的日期会变成考核依据；②相对时间必须有锚，锚点写在 `anchor`（形如 `R-003@2026-11-17`）；③两条记录对同一件事给了冲突时间 → `unresolved_reason=conflict`，进人工队列。
 
+**三条约定（v0.1.1 拍板，2026-11-18 由责任人确认）**
+
+1. **周从周一起，区间记整周。** 「下周」（采集于 2026-11-17，周二）= `start: 2026-11-23` / `end: 2026-11-29`。不采用"从今天起 7 天"。理由：团队里"下周"默认指日历上的下一周；两种算法混用会让同一句话算出两个日期，然后在一致率统计里被记成"两人不一致"——这不是标注错，是约定缺失。
+2. **`captured_at` 必填。** 它是所有相对时间的唯一锚点；空着等于让"下周""周五"永远算不出来。拿不到采集时间的记录先补时间再进库。
+3. **粒度定不了就记 `null`**（例：「尽快」→ `granularity=null` + `unresolved_reason=vague_word`），不许硬填 `day`/`week` 充数。
+
 ### 3.7 否定、假设、转述、玩笑怎么处理
 
 `polarity` 和 `modality` 是两条独立轴，**四种组合都要能表达**：
@@ -253,7 +260,7 @@
 
 ---
 
-## 5. 十条边界案例（对应 `data/samples/B-04-boundary-cases.jsonl` 的 E01–E10，全部标 `origin: constructed`）
+## 5. 十一条边界案例（对应 `data/samples/B-04-boundary-cases.jsonl` 的 E01–E10，全部标 `origin: constructed`）
 
 | 编号 | 情形 | 原话（化名） | 期望写法 | 为什么这样定 |
 | --- | --- | --- | --- | --- |
@@ -263,14 +270,18 @@
 | E04 | 假设 | "如果下周还没定就先上简化版" | task + hypothetical + graph_eligible=false | 条件未发生，进图会凭空多一条任务 |
 | E05 | 跨记录同一任务 | 周一"补接口文档"、周三"文档还没动" | 两条断言 + 同一 `merge_key` | 合并靠 R-06 人工确认，不靠向量相似度 |
 | E06 | 时间模糊 | "月底前吧" | fuzzy + start/end 区间 + granularity=month | 能给区间就给，别落到具体某天 |
-| E07 | 依赖成环 | "前端等接口、接口等前端定字段" | 两条 depends_on + `dependency_cycle` 标记 | 现实里常是真的，删边反而失真 |
+| E07 | 依赖成环 | "前端等接口、接口等前端定字段" | 拆两条：E07-a / E07-b，各 1 条 depends_on + `dependency_cycle` 标记 | 现实里常是真的，删边反而失真 |
 | E08 | 引用他人 | "队长说先别动" | quoted + review=needs_human | 责任在队长，不在说话人 |
 | E09 | 玩笑 | "我明天通宵搞定（笑）" | commitment + joking + graph_eligible=false | 不把玩笑记成承诺 |
 | E10 | 中英混用 | "先用 mock 挡一下，等 API 好了再接" | task + information 依赖 + `target_label="API"` | 术语不翻译、不丢，保留原词 |
 
-10 条边界案例各带 `must_hold` 断言，跑 `python scripts/check-b04-samples.py` 可复现校验（10/10）。
+> **E07 为什么要拆成两条（v0.1.1）**：`Dependency.direction` 是常量 `depends_on`（见 §3.5），一条断言只能表达"我依赖别人"这一个方向。所以「A 等 B 的接口」是 E07-a，「B 等 A 的数据」是 E07-b，两条合起来才是环。环本身是**建图之后**才知道的图级属性（`analysis-model` 报 `DEP_CYCLE`），所以 `review.reason=dependency_cycle` 要由第二遍回写；脚本 `check_cycle_groups()` 强制同一记录内至少两条带边的断言，防止"嘴上说成环、数据里只有一条边"。
 
-> 这 10 条是**构造的**极端案例，用途是证明 schema 能表达它们，**不是**真实语料，不能用来算准确率。真实记录样本（`B-04-real-records.jsonl`，20 条）必须由人标注，尚未产出。
+上表"原话"列是**示意**（保留可读性）。文件里的 `text` 是按断言切开的原句，两者不完全逐字相同——以 `B-04-boundary-cases.jsonl` 为准。
+
+11 条边界案例各带 `must_hold` 断言，跑 `python scripts/check-b04-samples.py` 可复现校验（11/11）。
+
+> 这 11 条是**构造的**极端案例，用途是证明 schema 能表达它们，**不是**真实语料，不能用来算准确率。真实记录样本（`B-04-real-records.jsonl`，20 条）必须由人标注，尚未产出。
 
 ---
 
@@ -347,9 +358,10 @@
 | 验收标准（任务单） | 状态 | 证据 |
 | --- | --- | --- |
 | 3 人独立标注字段级一致率 ≥0.7 | **未完成** | 需真人标注，见 §8-1 |
-| 10 条"必须能表达"案例全过，且不需临时加字段 | 通过 | `python scripts/check-b04-samples.py` → 边界案例 10/10 |
+| 10 条"必须能表达"案例全过，且不需临时加字段 | 通过 | `python scripts/check-b04-samples.py` → 边界案例 11/11（E07 拆为 a/b 两条） |
 | 每个字段能回答"什么算对"，可直接交给 B-05 | 通过 | §4 字段表的"不确定时怎么填"列 + §5 边界表 |
 | schema 无"其他/杂项"逃避字段 | 通过 | 检查器扫全部 enum，兜底词直接失败 |
+| schema 的约束**真的生效**（不是写着好看） | 通过（v0.1.1） | 5 条虚设约束已修；`scripts/check-b04-samples.py` 现在会把每条例子的简写期望翻译成完整断言再过一遍 schema |
 
 ---
 
@@ -360,6 +372,7 @@
 - [ ] R-03 实现时，先用 `scripts/check-b04-samples.py` 校验模型输出格式，再谈准确率
 - [x] 补读 AMI 决策标注指南（E-07，已读到正文）——结论：AMI 判"决定"用过程信号，与 §3.2 的语言信号不重合，见 §8-2
 - [x] ~~重做标注样本~~ 已执行 S0（2026-11-18）：删除 `B-04-annotation-samples.jsonl`（S01–S20 为合成记录，误置于"真实记录"位置）；E01–E10 迁入 `B-04-boundary-cases.jsonl` 并标 `origin: constructed`；checker 增加来源守卫（缺 `origin` 或 kind/origin 错位即失败）
+- [x] v0.1.1（2026-11-18）：修 5 条"虚设约束"（Dependency 非空、Actor.persons 与 status 联动、Record.captured_at 必填、入图断言必须有责任人槽位）；E07 拆成两条；新增 `scripts/b04_schema_lite.py`（零依赖校验器）与 `scripts/expand-b04-expected.py`（简写→完整断言）；checker 增加"展开后过 schema"与"成环分组"两道检查
 - [ ] 产出 `B-04-real-records.jsonl`：20 条真实脱敏记录，由成员人工标注（此步 AI 不能代劳）
 - [ ] 若能拿到 `.agent/` 里的 ADR-0001~0006，核对本单是否与既定数据模型冲突
 - [ ] C 级来源（E-02 / E-17 / E-18）要么补到 A，要么在答辩材料里删掉对应说法
@@ -369,11 +382,14 @@
 ## 附：怎么复现
 
 ```bash
-# 校验 schema 与 10 条边界案例（不装任何第三方库）
+# 校验 schema 与 11 条边界案例（不装任何第三方库）
 python scripts/check-b04-samples.py
 
 # 只看边界案例
 python scripts/check-b04-samples.py --file data/samples/B-04-boundary-cases.jsonl
+
+# 看"简写期望"被翻译成什么完整断言（并逐条过 schema）
+python scripts/expand-b04-expected.py --validate
 ```
 
 ## 附：产出方式说明（AI 参与情况）
