@@ -1,11 +1,18 @@
 # B-04 · 从中文记录中抽取哪些事实、字段边界如何界定
 
 - 调研人：张至顺 · 0002
-- 完成日期：2026-11-17
+- 完成日期：2026-11-17（v0.2 修订：2026-11-18）
 - 对应单子：B-04（P0 · 5 人日 · 建议 数据/抽取）
 - 状态：草稿（待队长评审）
-- 版本：v0.1
+- 版本：v0.2
 - 用途与范围：确定抽取 schema v0.1 的字段与边界；**不含**抽取实现、提示词、评测协议（评测见 B-05）。
+
+**变更记录**
+
+| 版本 | 日期 | 改了什么 | 为什么 |
+| --- | --- | --- | --- |
+| v0.1 | 2026-11-17 | 初稿：结论、九个问题、字段表、十条边界、映射表 | 首版交付 |
+| v0.2 | 2026-11-18 | ①§2 重写：加"核实级别"列，9 条扩到 19 条，逐条摘原句/页码；②新增 §6.1"只写核实过的对照"；③§8 增两条、改两条；④版本号与变更记录 | 上一版 9 条来源里 8 条实际只到"题录级"，却按已核实使用，违反规范 3.3 |
 
 > 读法：§1 是结论，§3 是九个问题的逐个回答，§4 是字段表（写代码时查这里），§5 是十条最难的边界案例，§6 是和外部的换算表。不想读全文的话，读 §1 与 §5。
 
@@ -23,19 +30,43 @@
 
 ## 2. 证据
 
-| 编号 | 类型 | 内容 | 来源链接 | 日期 |
-| --- | --- | --- | --- | --- |
-| E-01 | 官方文档 | Jira 的 issue link 只有"关系对"（blocks / is blocked by 等），方向由 link type 承担，两端各存一条 | https://developer.atlassian.com/cloud/jira/platform/issue-linking-model/ | 2026-11-17 |
-| E-02 | 官方文档 | 工作项关联的操作口径（页面正文由 JS 渲染，仅能读到导航与标题，细节标待核实） | https://support.atlassian.com/jira-software-cloud/docs/link-issues/ | 2026-11-17 |
-| E-03 | 行业对比 | RACI / DACI / RAPID 三种归属框架的差异：RACI 分四角色，DACI 把"驱动者"和"拍板者"分开，RAPID 细分到五角色 | https://quire.io/blog/p/raci-daci-rapid-ownership-frameworks.html | 2026-11-17 |
-| E-04 | 标准 | CRediT 贡献者角色分类（14 类贡献角色），说明"角色是有限枚举"在学术出版里已有先例 | https://zenodo.org/records/7640720 | 2026-11-17 |
-| E-05 | 标注指南 | AMI 会议语料的 decision 标注边界指南（PDF，本次未能抓取正文，仅作方向性参考，细节待核实） | https://groups.inf.ed.ac.uk/ami/corpus/Guidelines/decision_annotation-boundary-v1.4.pdf | 2026-11-17 |
-| E-06 | 论文（预印本，未经同行评审） | OSynth：用合成数据训练组织分析模型，说明"小样本 + 规则约束"是该领域的现实做法 | https://arxiv.org/html/2610.29319 | 2026-11-17 |
-| E-07 | 技术报告 | ICSI 会议语料的动作项/决策标注约定（PDF） | http://www.icsi.berkeley.edu/pubs/techreports/TR-11-003.pdf | 2026-11-17 |
-| E-08 | 仓库内文档 | `docs/20-architecture/analysis-model.md`：三图与指标口径（owner 唯一、`DEP_CYCLE` 视为数据错误） | 仓库内 | 2026-11-17 |
-| E-09 | 仓库内文档 | `docs/30-research/briefs/B-05-eval-protocol.md`：标注单位=记录→断言→字段，双人 κ≥0.6，六类错误 | 仓库内 | 2026-11-17 |
+**核实级别**（本表最重要的列，别跳过）：
 
-> 使用限制：E-01/E-02 只能支撑"关系要不要存方向"这一层，不能支撑"中文里怎么说"。中文说法部分来自本仓库语料与常识归纳，**没有**语料统计支撑，属工程判断，§8 已标注。
+| 级别 | 含义 | 允许怎么用 |
+| --- | --- | --- |
+| **A** | 读到了正文，且下面摘了原句 | 可以支撑结论 |
+| **B** | 只读到摘要/前言/文档页，没到给出定义的那一段 | 只能支撑"方向"，不能支撑"字段怎么定" |
+| **C** | 只看到题录、标题或二手转述，正文没拿到 | **只能列为线索，不能当依据**；须写明为什么拿不到 |
+| **无源** | 没有任何来源 | 写清是工程约定 |
+
+| 编号 | 类型 | 内容 | 来源链接 | 级别 | 原句 / 位置 |
+| --- | --- | --- | --- | --- | --- |
+| E-01 | 官方文档 | Jira 的 issue link 是"关系对"，方向由 link type 承担，两端各存一条 | https://developer.atlassian.com/cloud/jira/platform/issue-linking-model/ | **A** | `{"name": "Blocks", "inward": "is blocked by", "outward": "blocks"}`；`{"name": "Depends", "inward": "is depended on by", "outward": "depends on"}`；"Jira issue links are bidirectional, however, the semantics of each direction is only interpretable at the user interface level and not at the API level." |
+| E-02 | 官方文档 | 工作项关联的操作口径（正文由 JS 渲染，只拿到标题与导航） | https://support.atlassian.com/jira-software-cloud/docs/link-issues/ | **C** | 拿不到原因：页面主体由 JS 异步渲染，`curl` 与 `web_fetch` 都只返回骨架 HTML。内容与 E-01 重叠，仅作背景 |
+| E-03 | 行业文章（正文） | RACI 四角色定义，且强调"问责者只能有一个" | https://quire.io/blog/p/raci-daci-rapid-ownership-frameworks.html | **A** | "RACI stands for Responsible, Accountable, Consulted, Informed. It answers "who's doing what" on a task or a deliverable."；"Accountable: the person who owns the outcome. One name, not three." |
+| E-04 | 官方 playbook（正文） | DACI：把"驱动者"与"拍板者"分开，拍板者唯一 | https://www.atlassian.com/team-playbook/plays/daci | **A** | "D = Driver: The person responsible for corralling stakeholders…"；"A = Approver: The one person (yes: one!) who makes the decision." |
+| E-05 | 咨询机构文章（正文） | RAPID 五角色，且 Input 者无否决权 | https://www.bain.com/insights/decisions-who-does-what/ | **A** | "RAPID is an acronym … for Input, Recommend, Agree, Decide and Perform"；"They have the right to provide input to a recommendation but not to veto it." |
+| E-06 | 标准（PDF 正文） | CRediT 贡献者角色分类：14 类固定枚举 | https://zenodo.org/records/7640720/files/NISO+.pdf | **A** | 18 页 PDF，第 1 页列出 14 个角色名：Conceptualization / Data Curation / Formal Analysis / Funding Acquisition / Investigation / Methodology / Project Administration / Resources / Software / Supervision / Validation / Visualization / Writing – Original Draft / Writing – Review & Editing |
+| E-07 | 标注指南（PDF 正文） | AMI 会议语料的"决策—讨论"分段规则 | https://groups.inf.ed.ac.uk/ami/corpus/Guidelines/decision_annotation-boundary-v1.4.pdf | **A** | 7 页 PDF，标题 *Coding Instructions for Decision Discussion Segmentation of the AMI Meeting Corpus (Version 2.3), June 18, 2007*（p1）；每场会平均约 5 个决定、每个决定 1–3 段讨论；多个决定挤在同一时段时用**层级标注**（一个父段包多个子决定） |
+| E-08 | 论文（会议，PDF 正文） | MRDA（ICSI 会议语料）的标签体系：一句话一个 general tag + 若干 specific tag | https://aclanthology.org/W04-2319.pdf | **A** | 4 页 PDF（p1–p2）：11 种 general tag（如 statement / question / backchannel / disruption）＋ 39 种 specific tag，另有 adjacency pair 关系；全文 18 万+ 标签、72 小时会议、75 场会 |
+| E-09 | 论文（arXiv 正文 + 仓库 README） | QMSum：会议问答语料的字段结构与"证据片段"表示法 | https://arxiv.org/abs/2104.05938 、https://github.com/Yale-LILY/QMSum | **A** | JSON 四组字段：`meeting_transcript[{speaker, content}]`、`topic_list[{topic, relevant_text_span:[[s,e],…]}]`、`general_query_list[{query, answer}]`、`specific_query_list[{query, answer, relevant_text_span}]`；1,808 对 / 232 场会；**span 用"第几句"而不是字符偏移** |
+| E-10 | 论文（预印本，未经同行评审） | OSynth：合成会议数据 + 隐真值状态，人类辨伪准确率仅 56% | https://arxiv.org/abs/2610.29319 | **B** | 只读到摘要页：570 小时合成会议、latent ground-truth state、人类分辨真假仅 56%。正文未读，故只作"合成数据不等于标注语料"的提醒，不作字段依据 |
+| E-11 | 官方文档（HTML 正文） | OpenProject 工作包之间的关系类型 | https://www.openproject.org/docs/user-guide/work-packages/ | **A** | `curl` 得 207,965 字节 HTML，去标签后命中六组：`relates` / `precedes`-`follows` / `duplicates`-`duplicated by` / `blocks`-`blocked by` / `includes`-`part of` / `requires`-`required by`，另有 parent-child 层级 |
+| E-12 | 国际标准（PDF 正文） | DMN 1.5 决策表的结构：输入条目、输出条目、规则、命中策略 | https://www.omg.org/spec/DMN/1.5/PDF | **A** | 250 页 PDF，§8 决策表（PDF p74，正文页码 66）："The list of rules expresses the logic of the decision. For a given set of input values, the matching rule (or rules) indicate the resulting value for the output name. If rules overlap, multiple rules can match, and a hit policy indicates how to handle the multiple matches."，并定义 disjoint / overlapping / 'irrelevant' |
+| E-13 | 论文（期刊，PDF 正文） | 中文否定与推测的语料标注：否定与推测是两套独立标注 | https://journal.hep.com.cn/fcs/EN/PDF/10.1007/s11704-015-5101-2 | **A** | 17 页（Zou / Zhou / Zhu, *Front. Comput. Sci.* 2015）；摘要："Identifying negative or speculative narrative fragments from facts is crucial for deep understanding on NLP"；语料由三个来源子集构成，标注否定/推测的 cue 与 scope |
+| E-14 | 工具文档 | Duckling 的中文 time 维度可解析哪些时间说法 | https://duckling.leovan.tech/dimension/time/ | **B** | 读到了维度说明页，未读中文规则实现；只用于"相对时间要靠规则+锚点"的方向性支持 |
+| E-15 | 工具报错页 | SUTime 正则不支持中文（负向依据：中文时间归一必须自写） | https://stanfordnlp.github.io/CoreNLP/sutime.html | **B** | 文档说明 SUTime 的规则基于英文表达；未逐条验证中文输入，故标 B |
+| E-16 | — | "转述他人话"在中文里的处理 | 无 | **无源** | 未找到可引用的文献；本单按工程约定处理（`modality=quoted` + 进人工队列），不做学术声称 |
+| E-17 | 厂商社区帖 | RAID（Risks / Actions / Issues / Decisions）日志 | https://www.wrike.com/blog/raid-log/ | **C** | 只有厂商博文，未见规范或教材级来源；仅作术语提示 |
+| E-18 | 出版社书目 | DSM（设计结构矩阵）方法 | https://direct.mit.edu/books/monograph/3361/ | **C** | 只有书目页，正文付费墙；DSM 的"行列对应活动、格子表示依赖"属通行说法，但本单没拿到原书页码，故 §6 只用其结构直觉、不作字段依据 |
+| E-19 | 仓库内文档 | `docs/20-architecture/analysis-model.md` 三图与指标口径；`docs/30-research/briefs/B-05-eval-protocol.md` 标注单位与 κ | 仓库内 | — | 不涉外，作为本单的约束来源 |
+
+> 使用限制（保留并收紧）：
+> ① 能支撑"关系要存单向"的是 E-01（A）+ E-11（A）；**不能**用它们支撑"中文里怎么说"。
+> ② 中文说法（"等接口定稿""走完审批""大家弄一下"）**没有**语料统计支撑，属工程判断，§8-3 记着这件事。
+> ③ 上一版把 9 条来源全当已核实，其中 8 条实际只到 C 级——这是本次修订的主因，逐条见上表的"级别"列。
+
+> 核实方法（写下来，下一单照做）：能 `curl` 到的先 `curl` 原始 HTML 再用正则去标签（JS 渲染页也能拿到首屏数据）；PDF 一律下载后用 `pypdf` 抽文本、按关键词定位页码；抓不到正文就标 C 并写明原因，**不许把"搜到了标题"当成"读过了"**。
 
 ---
 
@@ -189,7 +220,7 @@
 | `assertion.polarity` | 肯定/否定 | affirmative / negated | 是 | 出现"不用/别/取消"→ negated，`graph_eligible=false` | §3.7 |
 | `assertion.modality` | 断言方式 | asserted / hypothetical / quoted / joking / reported | 是 | 有"如果/假如"→ hypothetical；有"他说"→ quoted | §3.7 |
 | `assertion.graph_eligible` | 是否进分析图 | boolean | 是 | 非 asserted 或 negated 一律 false | §3.7 |
-| `assertion.actors[].role` | 角色 | owner / contributor / approver / backup / mentioned | 是 | 只是被提到 → mentioned（**不入图**） | E-03、E-04 |
+| `assertion.actors[].role` | 角色 | owner / contributor / approver / backup / mentioned | 是 | 只是被提到 → mentioned（**不入图**） | E-03～E-06 |
 | `assertion.actors[].status` | 归属状态 | known / ambiguous / missing / group | 是 | 多候选→ambiguous（并列）；无人→missing；大家→group | §3.4 |
 | `assertion.actors[].persons[]` | 候选人 | `P01`… + `confidence` | known=1 个；ambiguous≥2；其余空 | 不强迫选一个 | §3.4 |
 | `assertion.actors[].group_scope` | 群体范围 | team / present / unspecified | 仅 group | 判不出范围 → unspecified | §3.4 |
@@ -260,6 +291,27 @@
 
 一句话：**RACI 有角色没方向，Jira 有方向没角色，DSM 有结构没语义。** 我们三样都要，所以只能自建，靠这张表保证能导出去。
 
+### 6.1 只写核实过的对照（级别见 §2）
+
+上面那张表是**设计意图**；这一节是**已经读到正文、能指出出处**的部分。两者混着写会让人以为整张表都有依据——上一版就是这么出问题的。
+
+| 外部结构（已核实） | 出处 | 对应我们的 | **不能**对应的 |
+| --- | --- | --- | --- |
+| Jira：`blocks` / `is blocked by`、`depends on` / `is depended on by` 成对出现，方向只存在于 UI 语义 | E-01（A） | `dependency{direction: depends_on, kind: precedence}`，导出时补反向 | Jira 不区分"为什么阻塞"；我们的 `resource/approval/information` 三类在 Jira 里没有位置 |
+| OpenProject 六组关系：`relates` / `precedes`-`follows` / `duplicates`-`duplicated by` / `blocks`-`blocked by` / `includes`-`part of` / `requires`-`required by` | E-11（A） | `blocks`→`precedence`；`requires`→`resource` 或 `information`；`includes/part of`→`parent_task_id`；`duplicates`→`merged_into` | `relates`（泛相关）我们**不收**——它不进关键路径、也不进断档分析，收了只会稀释"依赖"这个词 |
+| DMN 决策表：`rules` 每条由输入条目→输出条目，规则重叠时由 `hit policy` 决定取哪条 | E-12（A） | 我们的 `decision` 断言 = DMN 的一条 rule（条件在原文里、结论在 `statement`） | 我们**没有** hit policy：同一议题出现两个相反结论时，用 `decision_state=superseded/reversed` + 时间先后解决，而不是"命中策略"。这是有意的——组织里的决定是随时间被推翻的，不是同时求值的 |
+| RACI：R/A/C/I 四角色，A 必须唯一 | E-03（A） | `owner`(R) / `approver`(A) / `contributor`(C) / `mentioned`(I) | RACI 的 A 是"对结果负责"，我们的 `approver` 是"签字放行"；两者在中文语境里常是同一人，但**不能默认等价**，导出时要提示 |
+| DACI：Driver 与 Approver 分开，Approver 唯一 | E-04（A） | Driver≈`owner(source=volunteered)`；Approver=`approver` | DACI 没有 `backup`；我们的断档分析必须靠 `backup`，所以这一列在导出时为空是**预期**，不是缺失 |
+| RAPID：Input / Recommend / Agree / Decide / Perform 五角色，Input 无否决权 | E-05（A） | Recommend≈`owner`；Decide≈`approver`；Input/Agree≈`contributor`（`mentioned` 不算 Input） | 我们的 `contributor` 是个大口袋，装不下"同意权"与"提供信息"的区别——需要时用 `source` + note，不新增角色 |
+| CRediT：14 类贡献角色，固定枚举 | E-06（A） | 只取 5 类，因为本产品只关心**结构性责任**（谁做/谁签/谁备/谁知情），不关心"谁做的数据分析" | CRediT 的粒度是"贡献类型"，我们的是"责任位置"；两者不是同一维度，不可互相换算 |
+| AMI：以"决策—讨论"为单位切段，一个决定 1–3 段讨论，决策密集处用层级 | E-07（A） | 分段单位仍是**断言**（比"决策段"更细）；密集处用 `parent_task_id` 建层级 | AMI 的切段面向"讨论过程分析"，我们面向"责任与依赖"，同一段话可能切出 1 条 decision + 2 条 task，这是正常的 |
+| MRDA：一个话轮 1 个 general tag（11 种）+ 若干 specific tag（39 种）+ adjacency pair | E-08（A） | `type`（单值，对应 general）+ `polarity/modality`（多轴，对应 specific 的一部分） | adjacency pair（问答配对）我们**不做**：本单只抽事实，不做对话结构分析 |
+| QMSum：`relevant_text_span` 用**话语序号区间**表示证据 | E-09（A） | 我们用**字符码位**区间 + `quote` 原文 | 话语序号依赖"先分好句"，而我们的输入是自由文本；两套偏移不可混用 |
+| 中文否定与推测分两套独立标注（cue + scope） | E-13（A） | `polarity` 与 `modality` 分成两条轴，正是这个结论 | 我们不做 cue/scope 的细粒度标注——只判"这条断言整体是否定/假设"，scope 留给人工 |
+| RAID 四类（Risks/Actions/Issues/Decisions） | E-17（**C**） | 仅作术语提示：`decision` 与 `task` 分开记，在业界已是惯例 | 来源太弱，**不许在答辩里当依据引用** |
+| DSM：行列对应活动、格子表示依赖强度 | E-18（**C**） | 仅作"依赖可以做成矩阵"的直觉 | 没拿到原书页码，§6 主表的 DSM 一列只能算设计参照，不算文献依据 |
+
+
 ---
 
 ## 7. 对设计的影响
@@ -278,11 +330,12 @@
 | # | 问题 | 现状 | 需要谁定 |
 | --- | --- | --- | --- |
 | 1 | 三人独立标注的一致率（验收要求 ≥0.7）**未做** | 本单只产出 schema 与样本，一致性必须真人标注，模型自评不算数 | 队长安排 3 人各标 20 条 |
-| 2 | AMI 决策标注指南（E-05）只有 PDF、本次未读到正文 | 边界规则是按本仓库语料归纳的，未与 AMI 对齐 | 下次能读 PDF 时补 |
+| 2 | AMI 判"决定"的口径与本单 §3.2 的三信号不完全一致 | AMI（E-07）用的是"讨论边界 + 共识达成"的过程信号，我们用的是"结论词/被指派/结构化段落"的语言信号；两者不冲突但不重合 | 在标注工作坊（S5）里用 3–5 条真实记录做对照，定哪套优先 |
 | 3 | 依赖是否要第五类（"约定/契约"类，如"接口字段以文档为准"） | 暂归 `information` | 队长 / B-05 观察后定 |
 | 4 | `commitment` 与 `task` 在导出的 Jira 里无法区分 | 靠 label 兜 | 导出需求方（答辩材料）定 |
-| 5 | Jira 页面正文由 JS 渲染，E-02 只能作弱引用 | 已在证据表标注 | — |
+| 5 | RAID（E-17）与 DSM（E-18）都只有 C 级来源 | §6.1 已标为"不得作为文献依据" | 答辩口径由队长定 |
 | 6 | `type=status_update` 是否要单独成类（有意见认为可并入 task 的状态变更） | 暂保留，因为它承载"进度事实"而非"任务" | B-05 统计后再议 |
+| 7 | 中文说法（"等接口定稿""走完审批""大家弄一下"）**没有**语料统计支撑 | 属工程判断，不是文献结论 | 若要写进论文，需自建小语料统计，见 B-05 |
 
 ---
 
@@ -302,8 +355,10 @@
 - [ ] 队长安排 3 人各标 20 条，算字段级一致率（本单唯一未完成项）
 - [ ] B-05 按 §4 字段清单写评测脚本；`confidence` 三档写进提示词约束
 - [ ] R-03 实现时，先用 `scripts/check-b04-samples.py` 校验模型输出格式，再谈准确率
-- [ ] 补读 AMI 决策标注指南，核对 §3.2 的结论词清单
+- [x] 补读 AMI 决策标注指南（E-07，已读到正文）——结论：AMI 判"决定"用过程信号，与 §3.2 的语言信号不重合，见 §8-2
+- [ ] **重做标注样本**：`B-04-annotation-samples.jsonl` 里 S01–S20 是合成记录，不符合任务单 §2.2-1"20 条真实记录"，已列为作废项；须拆成 `B-04-boundary-cases.jsonl`（E01–E10，标 `origin: constructed`）+ `B-04-real-records.jsonl`（真实脱敏 20 条，由人工标注）
 - [ ] 若能拿到 `.agent/` 里的 ADR-0001~0006，核对本单是否与既定数据模型冲突
+- [ ] C 级来源（E-02 / E-17 / E-18）要么补到 A，要么在答辩材料里删掉对应说法
 
 ---
 
@@ -323,9 +378,9 @@ python scripts/check-b04-samples.py --file data/samples/B-04-annotation-samples.
 
 | 项 | 内容 |
 | --- | --- |
-| 参与环节 | 资料检索与摘要（§2 证据表）、schema v0.1 字段草案、30 条标注样本与边界案例初稿、`scripts/check-b04-samples.py`、本文档结构与初稿 |
-| 使用的工具 | 编码 Agent（DeepSeek 模型），通过终端读仓库文档、写文件、跑本地校验脚本 |
-| 人工核验方式 | ①逐条打开 §2 的证据链接确认可访问、结论未被过度引申；②本地运行 `python scripts/check-b04-samples.py` 复现 30/30；③对 §1 五条结论与 §5 十条边界规则能逐条复述；④对每个字段能回答"什么算对" |
-| **未核验项（待核实）** | AMI 决策标注指南正文（E-05，仅 PDF 未读）、Jira 帮助页正文（E-02，JS 渲染截断）、中文说法分类（§3.5 的四类划分无语料统计支撑，属工程判断） |
+| 参与环节 | 资料检索与摘要（§2 证据表）、schema v0.1 字段草案、30 条标注样本与边界案例初稿、`scripts/check-b04-samples.py`、本文档结构与初稿、v0.2 的证据级别复核与 §6.1 |
+| 使用的工具 | 编码 Agent（DeepSeek 模型），通过终端读仓库文档、`curl` 抓网页原文、`pypdf` 抽 PDF 文本、写文件、跑本地校验脚本 |
+| 人工核验方式 | ①逐条打开 §2 的链接与 PDF 页码，核对"原句"是否真实存在且未被引申；②本地运行 `python scripts/check-b04-samples.py` 复现 30/30；③对 §1 五条结论与 §5 十条边界规则能逐条复述；④对每个字段能回答"什么算对" |
+| **未核验项（待核实）** | ①**C 级 3 条**：E-02（Jira 帮助页正文 JS 渲染拿不到）、E-17（RAID 仅厂商博文）、E-18（DSM 原书付费墙）；②**B 级 3 条**：E-10（OSynth 只读摘要）、E-14（Duckling 未读实现）、E-15（SUTime 未逐条验证中文）；③**无源 1 条**：E-16 转述处理属工程约定；④§3.5 四类依赖与 §3.6 时间归一的中文说法**无语料统计支撑** |
 | 责任归属 | 本文档的结论由调研人负责，不以"AI 生成"作为免责理由（规范 3.1、3.3） |
 
