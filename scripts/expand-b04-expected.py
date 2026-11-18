@@ -68,6 +68,9 @@ def _time(t: dict | None, record: dict) -> dict:
     if kind in {"relative", "event_ref"}:
         # 锚点取记录的采集时间：没有它，"下周""周五"永远算不出来
         out["anchor"] = t.get("anchor") or record.get("captured_at")
+    if kind == "relative":
+        # v0.1.4：周算法锁死成自然周（周一起）。不填会导致「下周日」在两个人手里差 7 天。
+        out["week_rule"] = "natural_week"
     if t.get("unresolved_reason") is not None:
         out["unresolved_reason"] = t["unresolved_reason"]
     return out

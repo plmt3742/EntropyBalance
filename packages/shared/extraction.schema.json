@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "0.1.3",
+      "const": "0.1.4",
       "description": "本文件格式版本。字段变更必须同步 packages/shared/README.md 与 B-05 标注规范。"
     },
     "run": {
@@ -570,6 +570,10 @@
             null
           ],
           "description": "kind=fuzzy 且无法落到区间、或 event_ref 事件未定时的理由。禁止填『其他』。"
+        },
+        "week_rule": {
+          "const": "natural_week",
+          "description": "「本周／下周／周X」的算法，v0.1.4 起唯一取值 natural_week：一周从周一起，区间记整周。举例：采集于 2026-11-17（周二）的『下周日』= 2026-11-29，不是 11-22。kind=relative 时必须出现，其它 kind 可省略。"
         }
       }
     },

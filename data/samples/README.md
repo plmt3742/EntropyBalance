@@ -82,3 +82,4 @@
 | 2026-11-18 | 新增 `B-04-labels-0002.jsonl`（399 条消息判定）与 `B-04-owner-labels.jsonl`（119 行责任/执行标注） | 人工标注是验收项，且必须由人完成；单独成文件便于多轮与复核 |
 | 2026-11-18 | 新增 `B-04-dependency-labels.jsonl`（36 条依赖），checker 增加 `check_dependency_labels` | 依赖是验收项之一；实测 12/14 指向记录之外，`precedence` 为 0 |
 | 2026-11-18 | 新增 `B-04-time-labels.jsonl`（26 句时间标注），checker 增加 `check_time_labels` | 时间归一是验收项；实测 9 条时间词不含日期，且同一句「下周日」出现两种读法 |
+| 2026-11-18 | schema v0.1.4：`TimeRef.week_rule` 锁死 `natural_week`；`B-04-time-labels.jsonl` 里 R-123 改判 `unknown` | 「下周」有两种读法，光写文档不管用，必须做成必填枚举 |

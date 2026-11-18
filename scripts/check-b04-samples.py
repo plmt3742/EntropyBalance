@@ -319,8 +319,13 @@ def check_expanded_schema(samples: list[dict]) -> list[str]:
         if not s.get("expected"):
             # 尚未人工标注的记录（只有 candidates）不参与"简写能展开"检查
             continue
-        for err in check(mod.expand(s, i), schema["$defs"]["Assertion"], schema):
+        assertion = mod.expand(s, i)
+        for err in check(assertion, schema["$defs"]["Assertion"], schema):
             errs.append(f"{s['sample_id']}: {err}")
+        # v0.1.4：相对时间必须带 week_rule，否则「下周日」在不同人手里差 7 天
+        time = assertion.get("time") or {}
+        if time.get("kind") == "relative" and time.get("week_rule") != "natural_week":
+            errs.append(f"{s['sample_id']}: 相对时间缺 week_rule（应为 natural_week）")
     return errs
 
 

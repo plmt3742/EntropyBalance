@@ -20,7 +20,7 @@
 {"sample_id": "R-120", "message_index": 0, "hit": "下午", "choice": "vague", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": null}
 {"sample_id": "R-120", "message_index": 2, "hit": "下午", "choice": "vague", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": null}
 {"sample_id": "R-122", "message_index": 3, "hit": "等下", "choice": "vague", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": null}
-{"sample_id": "R-123", "message_index": 0, "hit": "周四", "choice": "date", "date": "2026-11-22", "round": "R4-20261118", "annotator": "0002", "flag": "weekday_mismatch"}
+{"sample_id": "R-123", "message_index": 0, "hit": "周四", "choice": "unknown", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": "weekday_mismatch", "note": "原文把「周四」与「周末」并列为可选，无法定到某一天；标注人 2026-11-18 复核改为定不了"}
 {"sample_id": "R-123", "message_index": 2, "hit": "这周", "choice": "vague", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": null}
 {"sample_id": "R-127", "message_index": 4, "hit": "下周", "choice": "date", "date": "2026-11-29", "round": "R4-20261118", "annotator": "0002", "flag": null}
 {"sample_id": "R-129", "message_index": 8, "hit": "晚点", "choice": "vague", "date": null, "round": "R4-20261118", "annotator": "0002", "flag": null}

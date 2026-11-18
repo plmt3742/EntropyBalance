@@ -28,3 +28,9 @@ npx openapi-typescript packages/shared/openapi.json -o packages/shared/api.d.ts
   `python scripts/check-b04-samples.py`（规则 + 展开后过 schema）与
   `python scripts/expand-b04-expected.py --validate`。
   校验器是 `scripts/b04_schema_lite.py`（零依赖子集实现，不引 `jsonschema`）。
+
+## v0.1.4 变更
+
+- `$defs.TimeRef.week_rule`：取值只有 `natural_week`；`kind=relative` 时必须出现。
+  理由：实测同一个「下周日」被标成相差 7 天的两个日期（findings §3.6.1）。
+- `expand-b04-expected.py` 会自动给相对时间补 `week_rule`；`check-b04-samples.py` 缺它会报错。
