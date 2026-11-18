@@ -1,10 +1,10 @@
 # B-04 · 从中文记录中抽取哪些事实、字段边界如何界定
 
 - 调研人：张至顺 · 0002
-- 完成日期：2026-11-17（v0.12 修订：2026-11-18）
+- 完成日期：2026-11-17（v0.14 修订：2026-11-18）
 - 对应单子：B-04（P0 · 5 人日 · 建议 数据/抽取）
 - 状态：草稿（待队长评审）
-- 版本：v0.13
+- 版本：v0.14
 - 用途与范围：确定抽取 schema 的字段与边界；**不含**抽取实现、提示词、评测协议（评测见 B-05）。
 
 **变更记录**
@@ -23,8 +23,11 @@
 | v0.10 | 2026-11-18 | 新增 §8.1「标不下去的清单」（15 处，B 类 7 / C 类 7 / A 类 1），补任务单 §2.2-1 要求但此前缺失的产出 | 验收要求记录「标不下去」的位置；没有这张表，工作坊也无从下手 |
 | v0.11 | 2026-11-18 | 新增 §8.2「十类争议的规则决议」（工作坊的替代方式：10 条规则 + 三个后果 + 未决 9）；§3.1 补「请求句与问句不算断言」；§3.3 补「转述他人承诺」并记 schema 一层主体的局限；§8 增未决 8 | 工作坊凑不齐三人，与其空着，不如把规则显式化并写明缺什么 |
 | v0.12 | 2026-11-18 | 按 §8.2-9 回溯统一：17 条占位符 skipped 由 `unverifiable_reference` 改为 `no_assertion`，skipped 分布变为 319/5/1；未决 9 结案 | 规则与数据不一致比少一个信号更糟 |
-| v0.13 | 2026-11-18 | 校正 §3.6.1 计数：R-123 改判后「能定到某一天」由 16 改 15，日期分布 11-22 由 ×5 改 ×4（与 `B-04-time-labels.jsonl` 一致） | 写 PDF 前逐行对数据时发现文档与数据不符；文档里的数字必须能由 jsonl 复算 |
+| v0.13 | 2026-11-18 | 校正 §3.6.1 计数：R-123 改判后「能定到某一天」由 16 改 15，日期分布 11-22 由 \(\times 5\) 改 \(\times 4\)（与 `B-04-time-labels.jsonl` 一致） | 写 PDF 前逐行对数据时发现文档与数据不符；文档里的数字必须能由 jsonl 复算 |
+| v0.14 | 2026-11-18 | 数学符号统一改 LaTeX 记法（`\(\ge 0.7\)`、`\(\times 4\)`、`\(0.3\,/\,0.6\,/\,0.9\)` 等），并在「读法」上方加「记法」说明；PDF 同步重生成（公式用 KaTeX 排版，新增附录 H 公式与符号速查） | 统一记法，Markdown 与 PDF 两处一致；符号能真正渲染而不是靠字形凑 |
 
+
+> 记法：本文的数学符号一律用 LaTeX（`$...$` 行内、`$$...$$` 独立行），GitHub 与 Obsidian 都能直接渲染；表格里为可读性保留少量纯文本比值。
 
 > 读法：§1 是结论，§3 是九个问题的逐个回答，§4 是字段表（写代码时查这里），§5 是十条最难的边界案例，§6 是和外部的换算表。不想读全文的话，读 §1 与 §5。
 
@@ -275,7 +278,7 @@
 | 只是口头语（「等下」「晚点」「看一下下午」） | 9 |
 | 定不了 / 已过去 | 1（R-123，责任人复核后改判） |
 
-落定的日期分布：2026-11-18 ×4、2026-11-22 ×4、2026-11-26 ×4、2026-11-29 ×3（R-123 改判「定不了」后从本行扣除）。**注意 9 条"口头语"**——真实语料里将近四成"时间词"根本不指日期，把它们当相对时间去换算，会凭空造出 9 个不存在的截止日。
+落定的日期分布：2026-11-18 \(\times 4\)、2026-11-22 \(\times 4\)、2026-11-26 \(\times 4\)、2026-11-29 \(\times 3\)（R-123 改判「定不了」后从本行扣除）。**注意 9 条"口头语"**——真实语料里将近四成"时间词"根本不指日期，把它们当相对时间去换算，会凭空造出 9 个不存在的截止日。
 
 三条比数字更重要的发现：
 
@@ -311,7 +314,7 @@
 
 三层，从轻到重：
 
-1. `confidence` 只有三档：**0.3 / 0.6 / 0.9**。不许填 0.72 这种精度——评一致率时精度是假的，三档才能算 κ，也方便 bootstrap。
+1. `confidence` 只有三档：**\(0.3\,/\,0.6\,/\,0.9\)**。不许填 0.72 这种精度——评一致率时精度是假的，三档才能算 κ，也方便 bootstrap。
 2. `Actor.status`：多候选用 `ambiguous`（并列 persons），缺失用 `missing`，群体用 `group`。**永不强迫选一个**。
 3. `review`：`needs_human=true` + `reason`（六个之一）。低置信、非断言、多候选 owner、缺失 owner、依赖成环、边界案例，六种情况都必须进队列。
 
@@ -333,7 +336,7 @@
 | `assertion.graph_eligible` | 是否进分析图 | boolean | 是 | 非 asserted 或 negated 一律 false | §3.7 |
 | `assertion.actors[].role` | 角色 | owner / contributor / approver / backup / mentioned | 是 | 只是被提到 → mentioned（**不入图**） | E-03～E-06 |
 | `assertion.actors[].status` | 归属状态 | known / ambiguous / missing / group | 是 | 多候选→ambiguous（并列）；无人→missing；大家→group | §3.4 |
-| `assertion.actors[].persons[]` | 候选人 | `P01`… + `confidence` | known=1 个；ambiguous≥2；其余空 | 不强迫选一个 | §3.4 |
+| `assertion.actors[].persons[]` | 候选人 | `P01`… + `confidence` | known=1 个；ambiguous\(\ge 2\)；其余空 | 不强迫选一个 | §3.4 |
 | `assertion.actors[].group_scope` | 群体范围 | team / present / unspecified | 仅 group | 判不出范围 → unspecified | §3.4 |
 | `assertion.actors[].source` | 归属来源 | explicit / inferred / self_committed / volunteered | 否 | inferred 必须在 note 写推断依据 | §3.3 |
 | `assertion.time.kind` | 时间类型 | absolute / relative / event_ref / fuzzy / none | 是 | 说不清 → fuzzy + `unresolved_reason` | §3.6 |
@@ -346,11 +349,11 @@
 | `assertion.dependencies[].direction` | 依赖方向 | 常量 `depends_on` | 是 | 只有一种写法 | §3.5、E-01 |
 | `assertion.dependencies[].kind` | 依赖类型 | precedence / resource / approval / information | 是 | 判不出 → information（最常见）并进人工 | §3.5 |
 | `assertion.dependencies[].strength` | 强弱 | hard / soft | 是 | 拿不准 → soft（宁可不进关键路径） | §3.5 |
-| `assertion.dependencies[].target_*` | 前置目标 | `target_task_id` 或 `target_label`（≥1 个） | 是 | 库内没有该任务 → label | §3.5 |
+| `assertion.dependencies[].target_*` | 前置目标 | `target_task_id` 或 `target_label`（\(\ge 1\) 个） | 是 | 库内没有该任务 → label | §3.5 |
 | `assertion.parent_task_id` | 父任务 | `A-0001` / null | 否 | 层级不明 → null，不做深度推断 | §3.8 |
-| `assertion.merge_key` | 粗聚类键 | ≤80 字规范化串 | 否 | 只对可能重复的任务填 | §3.8 |
+| `assertion.merge_key` | 粗聚类键 | \(\le 80\) 字规范化串 | 否 | 只对可能重复的任务填 | §3.8 |
 | `assertion.merged_into` | 并入目标 | `A-0001` / null | 否 | 合并由 R-06 填 | §3.8 |
-| `assertion.confidence` | 置信度 | 0.3 / 0.6 / 0.9 | 是 | 只有三档 | §3.9 |
+| `assertion.confidence` | 置信度 | \(0.3\,/\,0.6\,/\,0.9\) | 是 | 只有三档 | §3.9 |
 | `assertion.review.needs_human` | 进人工队列 | boolean + reason | 是 | 六种情况必须 true | §3.9 |
 | `skipped[].reason` | 不抽的理由 | chitchat / greeting / meta_instruction / duplicate / unverifiable_reference / no_assertion | 是 | 六选一，禁兜底 | §3.1 |
 | `run.offset_unit` | 证据偏移单位 | 常量 `unicode_code_point` | 是 | 前端 UTF-16 下标要换算 | §4.1 |
@@ -446,7 +449,7 @@
 
 | # | 问题 | 现状 | 需要谁定 |
 | --- | --- | --- | --- |
-| 1 | 三人独立标注的一致率（验收要求 ≥0.7）**未做** | 本单只产出 schema 与样本，一致性必须真人标注，模型自评不算数 | 队长安排 3 人各标 20 条 |
+| 1 | 三人独立标注的一致率（验收要求 \(\ge 0.7\)）**未做** | 本单只产出 schema 与样本，一致性必须真人标注，模型自评不算数 | 队长安排 3 人各标 20 条 |
 | 2 | AMI 判"决定"的口径与本单 §3.2 的三信号不完全一致 | AMI（E-07）用的是"讨论边界 + 共识达成"的过程信号，我们用的是"结论词/被指派/结构化段落"的语言信号；两者不冲突但不重合 | 在标注工作坊（S5）里用 3–5 条真实记录做对照，定哪套优先 |
 | 3 | 依赖是否要第五类（"约定/契约"类，如"接口字段以文档为准"） | 暂归 `information` | 队长 / B-05 观察后定 |
 | 4 | `commitment` 与 `task` 在导出的 Jira 里无法区分 | 靠 label 兜 | 导出需求方（答辩材料）定 |
@@ -520,7 +523,7 @@
 
 | 验收标准（任务单） | 状态 | 证据 |
 | --- | --- | --- |
-| 3 人独立标注字段级一致率 ≥0.7 | **未完成** | 队长决定单人标注（2026-11-18），故**未测一致率**，不能写"达标"；需真人标注，见 §8-1 |
+| 3 人独立标注字段级一致率 \(\ge 0.7\) | **未完成** | 队长决定单人标注（2026-11-18），故**未测一致率**，不能写"达标"；需真人标注，见 §8-1 |
 | 10 条"必须能表达"案例全过，且不需临时加字段 | 通过 | `python scripts/check-b04-samples.py` → 边界案例 11/11（E07 拆为 a/b 两条） |
 | 每个字段能回答"什么算对"，可直接交给 B-05 | 通过 | §4 字段表的"不确定时怎么填"列 + §5 边界表 |
 | schema 无"其他/杂项"逃避字段 | 通过 | 检查器扫全部 enum，兜底词直接失败 |
