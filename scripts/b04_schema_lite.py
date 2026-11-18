@@ -81,6 +81,12 @@ def check(value: Any, schema: dict, root: dict, path: str = "$") -> list[str]:
     if "enum" in schema and value not in schema["enum"]:
         errors.append(f"{path}: 取值 {value!r} 不在枚举 {schema['enum']} 内")
 
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            errors.append(f"{path}: 小于最小值 {schema['minimum']}（实际 {value}）")
+        if "maximum" in schema and value > schema["maximum"]:
+            errors.append(f"{path}: 大于最大值 {schema['maximum']}（实际 {value}）")
+
     if isinstance(value, str):
         if "minLength" in schema and len(value) < schema["minLength"]:
             errors.append(f"{path}: 长度至少 {schema['minLength']}，实际 {len(value)}")

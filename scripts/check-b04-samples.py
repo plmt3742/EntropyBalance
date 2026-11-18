@@ -312,6 +312,52 @@ def check_expanded_schema(samples: list[dict]) -> list[str]:
     return errs
 
 
+def check_message_coverage(samples: list[dict]) -> list[str]:
+    """口径（v0.1.2 起）：一条消息要么产出至少一条断言，要么记一条 skipped。
+
+    只对带 candidates 的样本生效（真实记录）。边界案例只有 expected，不适用。
+    这条规则的作用是让"漏抽"无处可藏：没被覆盖的消息会被点名，而不是默认当段落实有信息。
+    """
+    errs: list[str] = []
+    for s in samples:
+        cands = s.get("candidates")
+        if not cands:
+            continue
+        text = s.get("text", "")
+        lines = text.split("\n")
+        offs: list[tuple[int, int]] = []
+        cur = 0
+        for ln in lines:
+            offs.append((cur, cur + len(ln)))
+            cur += len(ln) + 1
+        rid = s["record"]["record_id"]
+        covered: set[int] = set()
+        for c in cands:
+            ev = c.get("evidence") or {}
+            a, b = ev.get("span_start"), ev.get("span_end")
+            if a is None or b is None:
+                continue
+            if c.get("type") == "skipped":
+                mi = c.get("message_index")
+                if mi is None:
+                    errs.append(f"{rid}/{c.get('cid')}: skipped 缺 message_index")
+                    continue
+                if not 0 <= mi < len(lines):
+                    errs.append(f"{rid}/{c.get('cid')}: message_index={mi} 越界（共 {len(lines)} 条消息）")
+                    continue
+                covered.add(mi)
+                continue
+            for i, (s0, e0) in enumerate(offs):
+                if a < e0 + 1 and b > s0:
+                    covered.add(i)
+        missing = [i for i in range(len(lines)) if i not in covered]
+        if missing:
+            head = "、".join(str(i) for i in missing[:6])
+            tail = "…" if len(missing) > 6 else ""
+            errs.append(f"{rid}: {len(missing)} 条消息既没断言也没 skipped（行号 {head}{tail}）")
+    return errs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", type=Path, default=DEFAULT_SAMPLES)
@@ -326,10 +372,11 @@ def main() -> int:
     lines = [ln for ln in args.file.read_text(encoding="utf-8").splitlines() if ln.strip()]
     samples = [json.loads(ln) for ln in lines]
 
-    structural = check_cycle_groups(samples) + check_expanded_schema(samples)
+    structural = (check_cycle_groups(samples) + check_expanded_schema(samples)
+                  + check_message_coverage(samples))
     if structural:
         for e in structural:
-            print(f"[FAIL] schema 表达: {e}")
+            print(f"[FAIL] 结构: {e}")
         return 1
 
     rows: list[tuple[str, str, str]] = []
