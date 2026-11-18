@@ -1,0 +1,28 @@
+{
+  "dataset": {
+    "id": "demo-team-a@2026-11-18",
+    "sha256": "9f2c4b7d1e8a03c5b6f7d8e9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"
+  },
+  "tool": {
+    "version": "0.1.0",
+    "model": "deepseek-chat",
+    "prompt": "extract-v3"
+  },
+  "metrics": {
+    "nodes": 24,
+    "edges": 31,
+    "density": 0.1123,
+    "risk_count": 4,
+    "handover_items": 11
+  },
+  "evidence": [
+    "P05 说图表那块得等 P04 定稿再动，不然尺寸对不上",
+    "联调卡在登录接口上",
+    "只有 P03 电脑能跑起来"
+  ],
+  "replay": {
+    "generated_at": "2026-11-18T10:00:00+08:00",
+    "pack": "demo-team-a-pack-v1",
+    "mode": "offline"
+  }
+}
