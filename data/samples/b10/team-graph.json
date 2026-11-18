@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "name": "b10-team-graph",
+    "synthetic": true,
+    "note": "8 人学生项目组的协作结构。人名以 P0x 表示，位置为 O0x。任务依赖方向：deps 中的任务必须先完成。",
+    "as_of": "2026-11-18"
+  },
+  "people": [
+    { "id": "P01", "label": "项目统筹", "positions": ["O1"] },
+    { "id": "P02", "label": "前端", "positions": ["O2"] },
+    { "id": "P03", "label": "后端", "positions": ["O3"] },
+    { "id": "P04", "label": "设计", "positions": ["O4"] },
+    { "id": "P05", "label": "数据与图表", "positions": ["O5"] },
+    { "id": "P06", "label": "文档与答辩", "positions": ["O6"] },
+    { "id": "P07", "label": "测试", "positions": ["O7"] },
+    { "id": "P08", "label": "兼职协助", "positions": [] }
+  ],
+  "positions": [
+    { "id": "O1", "title": "项目统筹", "owner": "P01", "backup": [] },
+    { "id": "O2", "title": "前端实现", "owner": "P02", "backup": [] },
+    { "id": "O3", "title": "服务端与接口", "owner": "P03", "backup": [] },
+    { "id": "O4", "title": "界面设计", "owner": "P04", "backup": [] },
+    { "id": "O5", "title": "数据处理与图表", "owner": "P05", "backup": [] },
+    { "id": "O6", "title": "文档与答辩", "owner": "P06", "backup": [] },
+    { "id": "O7", "title": "测试与验收", "owner": "P07", "backup": [] }
+  ],
+  "tasks": [
+    { "id": "T01", "title": "需求梳理", "position": "O1", "assignee": "P01", "due": "2026-11-20", "deps": [], "type": "deliverable" },
+    { "id": "T02", "title": "首页改版设计", "position": "O4", "assignee": "P04", "due": "2026-11-22", "deps": ["T01"], "type": "deliverable" },
+    { "id": "T03", "title": "登录页设计", "position": "O4", "assignee": "P04", "due": "2026-11-23", "deps": ["T02"], "type": "deliverable" },
+    { "id": "T04", "title": "前端框架搭建", "position": "O2", "assignee": "P02", "due": "2026-11-24", "deps": ["T01"], "type": "deliverable" },
+    { "id": "T05", "title": "登录接口", "position": "O3", "assignee": "P03", "due": "2026-11-25", "deps": ["T01"], "type": "deliverable" },
+    { "id": "T06", "title": "页面切图与还原", "position": "O2", "assignee": "P02", "due": "2026-11-27", "deps": ["T02", "T03"], "type": "deliverable" },
+    { "id": "T07", "title": "前后端联调", "position": "O2", "assignee": "P02", "due": "2026-11-29", "deps": ["T05", "T06"], "type": "deliverable" },
+    { "id": "T08", "title": "数据清洗", "position": "O5", "assignee": "P05", "due": "2026-11-26", "deps": ["T01"], "type": "deliverable" },
+    { "id": "T09", "title": "指标口径", "position": "O5", "assignee": "P05", "due": "2026-11-28", "deps": ["T08"], "type": "deliverable" },
+    { "id": "T10", "title": "图表生成", "position": "O5", "assignee": "P05", "due": "2026-12-01", "deps": ["T09"], "type": "deliverable" },
+    { "id": "T11", "title": "实验部分撰写", "position": "O6", "assignee": "P06", "due": "2026-12-03", "deps": ["T10"], "type": "deliverable" },
+    { "id": "T12", "title": "答辩讲稿", "position": "O6", "assignee": "P06", "due": "2026-12-05", "deps": ["T11"], "type": "deliverable" },
+    { "id": "T13", "title": "测试用例", "position": "O7", "assignee": "P07", "due": "2026-11-28", "deps": ["T05"], "type": "deliverable" },
+    { "id": "T14", "title": "回归测试", "position": "O7", "assignee": "P07", "due": "2026-12-02", "deps": ["T07"], "type": "deliverable" },
+    { "id": "T15", "title": "云迁移审批", "position": "O1", "assignee": "P01", "due": "2026-11-21", "deps": [], "type": "approval" },
+    { "id": "T16", "title": "服务迁移", "position": "O3", "assignee": "P03", "due": "2026-11-30", "deps": ["T15"], "type": "deliverable" },
+    { "id": "T17", "title": "演示彩排", "position": "O1", "assignee": "P01", "due": "2026-12-07", "deps": ["T12", "T14"], "type": "deliverable" },
+    { "id": "T18", "title": "材料归档", "position": "O1", "assignee": "P01", "due": "2026-12-10", "deps": ["T17"], "type": "deliverable" },
+    { "id": "T19", "title": "接口文档", "position": "O3", "assignee": "P03", "due": "2026-11-26", "deps": ["T05"], "type": "deliverable" },
+    { "id": "T20", "title": "问题清单整理", "position": "O7", "assignee": "P07", "due": "2026-12-04", "deps": ["T14"], "type": "deliverable" },
+    { "id": "T21", "title": "海报与展板", "position": "O4", "assignee": "P04", "due": "2026-12-04", "deps": ["T02"], "type": "deliverable" },
+    { "id": "T22", "title": "录音与照片整理", "position": null, "assignee": "P08", "due": null, "deps": ["T17"], "type": "deliverable" },
+    { "id": "T23", "title": "是否新增模块", "position": "O1", "assignee": "P01", "due": "2026-11-21", "deps": [], "type": "decision", "participants": ["P01", "P02", "P03", "P05"] }
+  ]
+}

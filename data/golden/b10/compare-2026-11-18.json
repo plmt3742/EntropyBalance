@@ -1,0 +1,119 @@
+{
+  "scenarios": [
+    {
+      "removed": "P03",
+      "ref_items": 4,
+      "covered": 4,
+      "coverage": 1.0,
+      "critical": 3,
+      "critical_covered": 3,
+      "critical_coverage": 1.0,
+      "missing": [],
+      "extra": [
+        "T07",
+        "T14",
+        "T17",
+        "T13",
+        "T18",
+        "T20",
+        "T22"
+      ],
+      "extra_judged": [
+        {
+          "task": "T07",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T14",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T17",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T13",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T18",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T20",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T22",
+          "note": "结构上受影响，属补充提示"
+        }
+      ],
+      "noise": [],
+      "group_mismatch": []
+    },
+    {
+      "removed": "P05",
+      "ref_items": 4,
+      "covered": 4,
+      "coverage": 1.0,
+      "critical": 3,
+      "critical_covered": 3,
+      "critical_coverage": 1.0,
+      "missing": [],
+      "extra": [
+        "T11",
+        "T12",
+        "T17",
+        "T18",
+        "T22"
+      ],
+      "extra_judged": [
+        {
+          "task": "T11",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T12",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T17",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T18",
+          "note": "结构上受影响，属补充提示"
+        },
+        {
+          "task": "T22",
+          "note": "结构上受影响，属补充提示"
+        }
+      ],
+      "noise": [],
+      "group_mismatch": []
+    },
+    {
+      "removed": "P08",
+      "ref_items": 1,
+      "covered": 1,
+      "coverage": 1.0,
+      "critical": 0,
+      "critical_covered": 0,
+      "critical_coverage": 1.0,
+      "missing": [],
+      "extra": [],
+      "extra_judged": [],
+      "noise": [],
+      "group_mismatch": []
+    }
+  ],
+  "totals": {
+    "ref_items": 9,
+    "covered": 9,
+    "coverage": 1.0,
+    "critical": 6,
+    "critical_covered": 6,
+    "critical_coverage": 1.0,
+    "noise": 0
+  }
+}
