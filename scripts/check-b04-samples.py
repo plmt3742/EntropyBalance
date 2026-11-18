@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""B-04 抽样检查：验证 schema 能表达 20 条样本与 10 条边界案例。
+"""B-04 抽样检查：验证 schema 能表达 10 条边界案例，并守住"合成数据不得冒充真实记录"。
 
 用途
 ----
@@ -9,7 +9,8 @@ B-04 的验收标准之一：10 条"必须能表达"的边界案例全部通过�
 用法
 ----
     python scripts/check-b04-samples.py
-    python scripts/check-b04-samples.py --file data/samples/B-04-annotation-samples.jsonl
+    python scripts/check-b04-samples.py --file data/samples/B-04-boundary-cases.jsonl
+    python scripts/check-b04-samples.py --file data/samples/B-04-real-records.jsonl  # 真实记录到位后
 
 退出码：0 = 全部通过；1 = 有失败项。
 
@@ -27,7 +28,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SAMPLES = ROOT / "data" / "samples" / "B-04-annotation-samples.jsonl"
+DEFAULT_SAMPLES = ROOT / "data" / "samples" / "B-04-boundary-cases.jsonl"
 SCHEMA_PATH = ROOT / "packages" / "shared" / "extraction.schema.json"
 
 ENUMS = {
@@ -153,6 +154,29 @@ def rule_discussion_not_ratified(s: dict) -> None:
         assert s["expected"].get("decision_state") != "ratified", "讨论不能标成已定决定"
 
 
+def check_origin(s: dict) -> list[str]:
+    """来源守卫：合成数据不许出现在"真实记录"的位置上。
+
+    约定：
+      kind=edge_case  -> origin 必须是 constructed（构造的极端案例）
+      kind=sample     -> origin 必须是 redacted_real（真实记录，已脱敏）
+    没有 origin 字段一律判失败——"来源不明"本身就是要拦的东西。
+    """
+    origin = s.get("origin")
+    kind = s.get("kind", "sample")
+    if origin is None:
+        return [f"{s['sample_id']}: 缺 origin 字段（constructed / redacted_real 必须显式写）"]
+    want = "constructed" if kind == "edge_case" else "redacted_real"
+    if origin != want:
+        return [f"{s['sample_id']}: kind={kind} 时 origin 必须是 {want}，实际是 {origin}"]
+    if origin == "redacted_real":
+        # 真实记录必须能追溯到来源记录号，否则无法复核
+        rid = s.get("record", {}).get("record_id", "")
+        if not rid:
+            return [f"{s['sample_id']}: 真实记录必须有 record_id 以便追溯"]
+    return []
+
+
 RULES = {
     "decision_has_no_owner": rule_decision_has_no_owner,
     "hypothetical_not_in_graph": rule_hypothetical_not_in_graph,
@@ -248,7 +272,7 @@ def main() -> int:
     failures = 0
     for s in samples:
         sid, kind = s["sample_id"], s.get("kind", "sample")
-        problems = check_enums(s)
+        problems = check_enums(s) + check_origin(s)
         for name in s["expected"].get("must_hold", []):
             fn = RULES.get(name)
             if fn is None:
@@ -270,12 +294,15 @@ def main() -> int:
 
     edge = [r for r in rows if r[1] == "edge_case"]
     edge_pass = [r for r in edge if r[2] == "PASS"]
+    real = [r for r in rows if r[1] != "edge_case"]
     print()
-    print(f"样本 {len(rows) - len(edge)} 条，边界案例 {len(edge)} 条")
+    print(f"真实记录 {len(real)} 条（本轮未标注），边界案例 {len(edge)} 条")
     print(f"边界案例通过 {len(edge_pass)}/{len(edge)}")
     if failures:
         print(f"失败项 {failures} 个")
         return 1
+    if not real:
+        print("注意：当前没有真实记录样本，仅边界案例通过——不构成验收所需的「20 条真实记录」")
     print("全部通过：schema 能表达全部用例，无需临时加字段")
     return 0
 

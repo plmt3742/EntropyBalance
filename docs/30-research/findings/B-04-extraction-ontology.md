@@ -1,10 +1,10 @@
 # B-04 · 从中文记录中抽取哪些事实、字段边界如何界定
 
 - 调研人：张至顺 · 0002
-- 完成日期：2026-11-17（v0.2 修订：2026-11-18）
+- 完成日期：2026-11-17（v0.3 修订：2026-11-18）
 - 对应单子：B-04（P0 · 5 人日 · 建议 数据/抽取）
 - 状态：草稿（待队长评审）
-- 版本：v0.2
+- 版本：v0.3
 - 用途与范围：确定抽取 schema v0.1 的字段与边界；**不含**抽取实现、提示词、评测协议（评测见 B-05）。
 
 **变更记录**
@@ -13,6 +13,7 @@
 | --- | --- | --- | --- |
 | v0.1 | 2026-11-17 | 初稿：结论、九个问题、字段表、十条边界、映射表 | 首版交付 |
 | v0.2 | 2026-11-18 | ①§2 重写：加"核实级别"列，9 条扩到 19 条，逐条摘原句/页码；②新增 §6.1"只写核实过的对照"；③§8 增两条、改两条；④版本号与变更记录 | 上一版 9 条来源里 8 条实际只到"题录级"，却按已核实使用，违反规范 3.3 |
+| v0.3 | 2026-11-18 | 删除合成的 20 条"真实记录"，边界案例迁到 `B-04-boundary-cases.jsonl` 并标 `origin: constructed`；§1-5、§5、§9、§10 与复现命令随之更新 | 合成数据不允许占"真实记录"的位置（任务单 §2.2-1、规范 3.3）|
 
 > 读法：§1 是结论，§3 是九个问题的逐个回答，§4 是字段表（写代码时查这里），§5 是十条最难的边界案例，§6 是和外部的换算表。不想读全文的话，读 §1 与 §5。
 
@@ -24,7 +25,7 @@
 2. **所有"说不清"的地方都不许猜，改用一个状态字段把它记下来，再进人工队列。** 具体是 `Actor.status`（known / ambiguous / missing / group）、`TimeRef.unresolved_reason`、`confidence` 三档、`review.needs_human`。这样错误是**可见的**，而不是被平均掉。
 3. **一句话可以同时是"事实"和"态度"**：`polarity`（肯定/否定）与 `modality`（断言/假设/引用/玩笑/转述）是两条独立轴。"不需要做 X"是 negated 的任务，不能当成"没有任务"删掉。
 4. **依赖只存一个方向**（本条 `depends_on` 目标），且必须能落到"前置、资源、审批、信息"四类之一——中文里的"等""走完""批了再说""回头问一下"分别落在这四类，混在一起就没法算关键路径。
-5. 交付物：`packages/shared/extraction.schema.json` v0.1 + 30 条标注样本（20 样本 + 10 边界）+ `scripts/check-b04-samples.py`（机器校验 17 条规则，当前 30/30 通过）。
+5. 交付物：`packages/shared/extraction.schema.json` v0.1 + `data/samples/B-04-boundary-cases.jsonl`（10 条边界案例，`origin: constructed`）+ `scripts/check-b04-samples.py`（17 条规则 + 来源守卫，当前 10/10 通过）。**20 条真实记录尚未产出**——原 v0.1 里的 20 条是我合成的，已于 2026-11-18 删除，见 §10。
 
 ---
 
@@ -252,7 +253,7 @@
 
 ---
 
-## 5. 十条边界案例（对应 `data/samples/B-04-annotation-samples.jsonl` 的 E01–E10）
+## 5. 十条边界案例（对应 `data/samples/B-04-boundary-cases.jsonl` 的 E01–E10，全部标 `origin: constructed`）
 
 | 编号 | 情形 | 原话（化名） | 期望写法 | 为什么这样定 |
 | --- | --- | --- | --- | --- |
@@ -267,7 +268,9 @@
 | E09 | 玩笑 | "我明天通宵搞定（笑）" | commitment + joking + graph_eligible=false | 不把玩笑记成承诺 |
 | E10 | 中英混用 | "先用 mock 挡一下，等 API 好了再接" | task + information 依赖 + `target_label="API"` | 术语不翻译、不丢，保留原词 |
 
-完整 30 条（20 样本 + 10 边界）含 `must_hold` 断言，跑 `python scripts/check-b04-samples.py` 可复现校验。
+10 条边界案例各带 `must_hold` 断言，跑 `python scripts/check-b04-samples.py` 可复现校验（10/10）。
+
+> 这 10 条是**构造的**极端案例，用途是证明 schema 能表达它们，**不是**真实语料，不能用来算准确率。真实记录样本（`B-04-real-records.jsonl`，20 条）必须由人标注，尚未产出。
 
 ---
 
@@ -356,7 +359,8 @@
 - [ ] B-05 按 §4 字段清单写评测脚本；`confidence` 三档写进提示词约束
 - [ ] R-03 实现时，先用 `scripts/check-b04-samples.py` 校验模型输出格式，再谈准确率
 - [x] 补读 AMI 决策标注指南（E-07，已读到正文）——结论：AMI 判"决定"用过程信号，与 §3.2 的语言信号不重合，见 §8-2
-- [ ] **重做标注样本**：`B-04-annotation-samples.jsonl` 里 S01–S20 是合成记录，不符合任务单 §2.2-1"20 条真实记录"，已列为作废项；须拆成 `B-04-boundary-cases.jsonl`（E01–E10，标 `origin: constructed`）+ `B-04-real-records.jsonl`（真实脱敏 20 条，由人工标注）
+- [x] ~~重做标注样本~~ 已执行 S0（2026-11-18）：删除 `B-04-annotation-samples.jsonl`（S01–S20 为合成记录，误置于"真实记录"位置）；E01–E10 迁入 `B-04-boundary-cases.jsonl` 并标 `origin: constructed`；checker 增加来源守卫（缺 `origin` 或 kind/origin 错位即失败）
+- [ ] 产出 `B-04-real-records.jsonl`：20 条真实脱敏记录，由成员人工标注（此步 AI 不能代劳）
 - [ ] 若能拿到 `.agent/` 里的 ADR-0001~0006，核对本单是否与既定数据模型冲突
 - [ ] C 级来源（E-02 / E-17 / E-18）要么补到 A，要么在答辩材料里删掉对应说法
 
@@ -365,11 +369,11 @@
 ## 附：怎么复现
 
 ```bash
-# 校验 schema 与 30 条样本（不装任何第三方库）
+# 校验 schema 与 10 条边界案例（不装任何第三方库）
 python scripts/check-b04-samples.py
 
 # 只看边界案例
-python scripts/check-b04-samples.py --file data/samples/B-04-annotation-samples.jsonl
+python scripts/check-b04-samples.py --file data/samples/B-04-boundary-cases.jsonl
 ```
 
 ## 附：产出方式说明（AI 参与情况）
@@ -378,9 +382,9 @@ python scripts/check-b04-samples.py --file data/samples/B-04-annotation-samples.
 
 | 项 | 内容 |
 | --- | --- |
-| 参与环节 | 资料检索与摘要（§2 证据表）、schema v0.1 字段草案、30 条标注样本与边界案例初稿、`scripts/check-b04-samples.py`、本文档结构与初稿、v0.2 的证据级别复核与 §6.1 |
+| 参与环节 | 资料检索与摘要（§2 证据表）、schema v0.1 字段草案、10 条边界案例初稿、`scripts/check-b04-samples.py`、本文档结构与初稿、v0.2 的证据级别复核与 §6.1 |
 | 使用的工具 | 编码 Agent（DeepSeek 模型），通过终端读仓库文档、`curl` 抓网页原文、`pypdf` 抽 PDF 文本、写文件、跑本地校验脚本 |
-| 人工核验方式 | ①逐条打开 §2 的链接与 PDF 页码，核对"原句"是否真实存在且未被引申；②本地运行 `python scripts/check-b04-samples.py` 复现 30/30；③对 §1 五条结论与 §5 十条边界规则能逐条复述；④对每个字段能回答"什么算对" |
+| 人工核验方式 | ①逐条打开 §2 的链接与 PDF 页码，核对"原句"是否真实存在且未被引申；②本地运行 `python scripts/check-b04-samples.py` 复现 10/10；③对 §1 五条结论与 §5 十条边界规则能逐条复述；④对每个字段能回答"什么算对" |
 | **未核验项（待核实）** | ①**C 级 3 条**：E-02（Jira 帮助页正文 JS 渲染拿不到）、E-17（RAID 仅厂商博文）、E-18（DSM 原书付费墙）；②**B 级 3 条**：E-10（OSynth 只读摘要）、E-14（Duckling 未读实现）、E-15（SUTime 未逐条验证中文）；③**无源 1 条**：E-16 转述处理属工程约定；④§3.5 四类依赖与 §3.6 时间归一的中文说法**无语料统计支撑** |
 | 责任归属 | 本文档的结论由调研人负责，不以"AI 生成"作为免责理由（规范 3.1、3.3） |
 
