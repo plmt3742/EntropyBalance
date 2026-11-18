@@ -7,7 +7,7 @@
 | 文件 | 内容 | 来源 |
 |---|---|---|
 | `B-04-boundary-cases.jsonl` | 11 条**构造的**极端案例（E01–E10，其中 E07 拆成 E07-a/E07-b），对应 B-04 任务单 §2.2-4 | 人工构造，`origin: constructed` |
-| `B-04-real-records.jsonl` | **真实**记录（脱敏，`origin: redacted_real`），对应 B-04 任务单 §2.2-1。当前 **12 条**（R-101～R-112），来自一段辩论赛筹备群聊 | `SOURCE.md`；切片由脚本生成，**标注尚未进行**（只有 `candidates`，没有 `expected`） |
+| `B-04-real-records.jsonl` | **真实**记录（脱敏，`origin: redacted_real`），对应 B-04 任务单 §2.2-1。当前 **17 条**（R-101～R-117），来自辩论赛筹备群（12 条）+ 团建筹备群（5 条） | `SOURCE.md`；切片由脚本生成，**标注尚未进行**（只有 `candidates`，没有 `expected`） |
 
 ## 计划内容
 
@@ -61,4 +61,4 @@
 | 日期 | 改动 | 原因 |
 |---|---|---|
 | 2026-11-18 | v0.1.1：E07 拆成 E07-a/E07-b（各 1 条依赖边）；E02/E04/E06/E08/E10 各分配独立 `record_id`（R-025～R-029），不再与他条共用；E06 的 `granularity` 改 `null` | `direction` 是常量，一条断言只能表达一个方向；共用 `record_id` 会让"同一记录"的成环/合并检查失真；`unknown` 不在枚举内，粒度定不了就该记 null |
-| 2026-11-18 | 删除 `B-04-annotation-samples.jsonl`；E01–E10 迁入 `B-04-boundary-cases.jsonl` 并标 `origin: constructed` | 原文件里 S01–S20 是合成记录，却被放在"20 条真实记录"的位置，违反任务单 §2.2-1 与团队规范 3.3；旧数据仍可从 commit `3dd3247` 取回，历史不改写 || 2026-11-18 | 新增 `B-04-real-records.jsonl`（12 条真实切片）+ `SOURCE.md`；README 增加 candidates/expected 说明 | 真实材料到位，先把切片与候选摆出来等人工标注；此前该文件只是占位 |
+| 2026-11-18 | 删除 `B-04-annotation-samples.jsonl`；E01–E10 迁入 `B-04-boundary-cases.jsonl` 并标 `origin: constructed` | 原文件里 S01–S20 是合成记录，却被放在"20 条真实记录"的位置，违反任务单 §2.2-1 与团队规范 3.3；旧数据仍可从 commit `3dd3247` 取回，历史不改写 || 2026-11-18 | 新增 `B-04-real-records.jsonl`（12 条真实切片）+ `SOURCE.md`；README 增加 candidates/expected 说明 | 真实材料到位，先把切片与候选摆出来等人工标注；此前该文件只是占位 || 2026-11-18 | 追加材料乙 5 条（R-113～R-117），合计 17 条 | 团建群材料到位；该批闲聊占比高，用于测「过度抽取」|
