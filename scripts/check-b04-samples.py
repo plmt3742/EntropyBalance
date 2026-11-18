@@ -371,8 +371,10 @@ def check_message_coverage(samples: list[dict]) -> list[str]:
 
 
 LABELS_PATH = ROOT / "data" / "samples" / "B-04-owner-labels.jsonl"
+DEP_LABELS_PATH = ROOT / "data" / "samples" / "B-04-dependency-labels.jsonl"
 REAL_RECORDS_PATH = ROOT / "data" / "samples" / "B-04-real-records.jsonl"
 LABEL_KINDS = {"known", "ambiguous", "group", "missing", "not_needed"}
+DEPENDENCY_KINDS = {"precedence", "resource", "approval", "information"}
 PERSON_RE = re.compile(r"^P\d{2}$")
 
 
@@ -418,6 +420,49 @@ def check_owner_labels(path: Path, records_path: Path) -> list[str]:
     return errs
 
 
+def check_dependency_labels(path: Path, records_path: Path) -> list[str]:
+    """人工依赖标注的合法性：指向的断言必须存在、有依赖就必须有目标与类别、无依赖不得带目标。"""
+    if not path.exists() or not records_path.exists():
+        return []
+    records = [json.loads(ln) for ln in records_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    known = {(s.get("record", {}).get("record_id"), c.get("cid"))
+             for s in records for c in (s.get("candidates") or [])}
+    errs: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for ln, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        try:
+            r = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            errs.append(f"{path.name}:{ln} 不是合法 JSON（{exc}）")
+            continue
+        key = (r.get("sample_id"), r.get("cid"))
+        if key not in known:
+            errs.append(f"{path.name}:{ln} 指向不存在的断言 {key[0]}/{key[1]}")
+        if key in seen:
+            errs.append(f"{path.name}:{ln} 同一断言重复标注 {key[0]}/{key[1]}")
+        seen.add(key)
+        wait = r.get("wait")
+        if not isinstance(wait, bool):
+            errs.append(f"{path.name}:{ln} wait 必须是 true/false")
+            continue
+        tgt_cid, tgt_label, kind = r.get("depends_on_cid"), r.get("depends_on_label"), r.get("kind")
+        if wait:
+            if not tgt_cid and not tgt_label:
+                errs.append(f"{path.name}:{ln} wait=true 但没有目标（depends_on_cid 或 depends_on_label 必须有一个）")
+            if kind not in DEPENDENCY_KINDS:
+                errs.append(f"{path.name}:{ln} kind 非法：{kind}（应为 {sorted(DEPENDENCY_KINDS)}）")
+            if tgt_cid and (key[0], tgt_cid) not in known:
+                errs.append(f"{path.name}:{ln} 前置断言不存在：{key[0]}/{tgt_cid}")
+            if tgt_cid and tgt_cid == key[1]:
+                errs.append(f"{path.name}:{ln} 不能依赖自己")
+        else:
+            if tgt_cid or tgt_label or kind:
+                errs.append(f"{path.name}:{ln} wait=false 却带了依赖目标或类别")
+    return errs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", type=Path, default=DEFAULT_SAMPLES)
@@ -434,7 +479,8 @@ def main() -> int:
 
     structural = (check_cycle_groups(samples) + check_expanded_schema(samples)
                   + check_message_coverage(samples)
-                  + check_owner_labels(LABELS_PATH, REAL_RECORDS_PATH))
+                  + check_owner_labels(LABELS_PATH, REAL_RECORDS_PATH)
+                  + check_dependency_labels(DEP_LABELS_PATH, REAL_RECORDS_PATH))
     if structural:
         for e in structural:
             print(f"[FAIL] 结构: {e}")
