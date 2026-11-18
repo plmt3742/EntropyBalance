@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -40,7 +41,7 @@ ENUMS = {
     "modality": {"asserted", "hypothetical", "quoted", "joking", "reported"},
     "task_state": {"proposed", "active", "done", "cancelled", None},
     "decision_state": {"proposed", "ratified", "reversed", "superseded", None},
-    "role": {"owner", "contributor", "approver", "backup", "mentioned"},
+    "role": {"owner", "executor", "contributor", "approver", "backup", "mentioned"},
     "actor_status": {"known", "ambiguous", "missing", "group"},
     "time_kind": {"absolute", "relative", "event_ref", "fuzzy", "none"},
     "dep_kind": {"precedence", "resource", "approval", "information"},
@@ -57,6 +58,16 @@ def owners(sample: dict) -> list[dict]:
 
 def rule_decision_has_no_owner(s: dict) -> None:
     assert not owners(s), "决定不应挂 owner：决定的落点是 approver，任务才有 owner"
+
+
+def executors(sample: dict) -> list[dict]:
+    return [a for a in sample["expected"].get("actors", []) if a.get("role") == "executor"]
+
+
+def rule_decision_has_no_executor(s: dict) -> None:
+    """决定没有『执行人』：决定之后才产生任务，任务才有执行人。
+    实测依据：人工标注时决定类的执行人一律标成『没人要做』，没有例外。"""
+    assert not executors(s), "决定不应挂 executor：决定本身不是一件要动手的事"
 
 
 def rule_hypothetical_not_in_graph(s: dict) -> None:
@@ -185,6 +196,7 @@ def check_origin(s: dict) -> list[str]:
 
 RULES = {
     "decision_has_no_owner": rule_decision_has_no_owner,
+    "decision_has_no_executor": rule_decision_has_no_executor,
     "hypothetical_not_in_graph": rule_hypothetical_not_in_graph,
     "negated_not_in_graph": rule_negated_not_in_graph,
     "joking_not_in_graph": rule_joking_not_in_graph,
@@ -358,6 +370,54 @@ def check_message_coverage(samples: list[dict]) -> list[str]:
     return errs
 
 
+LABELS_PATH = ROOT / "data" / "samples" / "B-04-owner-labels.jsonl"
+REAL_RECORDS_PATH = ROOT / "data" / "samples" / "B-04-real-records.jsonl"
+LABEL_KINDS = {"known", "ambiguous", "group", "missing", "not_needed"}
+PERSON_RE = re.compile(r"^P\d{2}$")
+
+
+def check_owner_labels(path: Path, records_path: Path) -> list[str]:
+    """人工责任/执行标注必须指向真实存在的断言，且取值合法。
+    断言的来源固定是 B-04-real-records.jsonl，与 --file 无关（边界案例里没有这些 cid）。"""
+    if not path.exists() or not records_path.exists():
+        return []
+    records = [json.loads(ln) for ln in records_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    known = {(s.get("record", {}).get("record_id"), c.get("cid"))
+             for s in records for c in (s.get("candidates") or [])}
+    errs: list[str] = []
+    seen: set[tuple[str, str, str]] = set()
+    for ln, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        try:
+            r = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            errs.append(f"{path.name}:{ln} 不是合法 JSON（{exc}）")
+            continue
+        key = (r.get("sample_id"), r.get("cid"))
+        role, kind = r.get("role"), r.get("kind")
+        if role not in {"accountable", "executor"}:
+            errs.append(f"{path.name}:{ln} role 非法：{role}")
+        if kind not in LABEL_KINDS:
+            errs.append(f"{path.name}:{ln} kind 非法：{kind}")
+        if key not in known:
+            errs.append(f"{path.name}:{ln} 指向不存在的断言 {key[0]}/{key[1]}")
+        if (key, role) in seen:
+            errs.append(f"{path.name}:{ln} 同一断言同一角色重复标注 {key[0]}/{key[1]}")
+        seen.add((key, role))
+        persons = r.get("persons") or []
+        if kind == "known" and len(persons) != 1:
+            errs.append(f"{path.name}:{ln} kind=known 必须恰好 1 人，实际 {len(persons)}")
+        if kind in {"missing", "group", "not_needed"} and persons:
+            errs.append(f"{path.name}:{ln} kind={kind} 不应带 persons")
+        if kind == "ambiguous" and len(persons) < 2:
+            errs.append(f"{path.name}:{ln} kind=ambiguous 至少要 2 个候选")
+        for p in persons:
+            if not PERSON_RE.match(str(p)):
+                errs.append(f"{path.name}:{ln} 人员编号格式不对：{p}（应形如 P01）")
+    return errs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", type=Path, default=DEFAULT_SAMPLES)
@@ -373,7 +433,8 @@ def main() -> int:
     samples = [json.loads(ln) for ln in lines]
 
     structural = (check_cycle_groups(samples) + check_expanded_schema(samples)
-                  + check_message_coverage(samples))
+                  + check_message_coverage(samples)
+                  + check_owner_labels(LABELS_PATH, REAL_RECORDS_PATH))
     if structural:
         for e in structural:
             print(f"[FAIL] 结构: {e}")
@@ -407,13 +468,17 @@ def main() -> int:
     edge_pass = [r for r in edge if r[2] == "PASS"]
     real = [r for r in rows if r[1] != "edge_case"]
     print()
-    print(f"真实记录 {len(real)} 条（本轮未标注），边界案例 {len(edge)} 条")
+    print(f"真实记录 {len(real)} 条，边界案例 {len(edge)} 条")
+    if LABELS_PATH.exists():
+        n = sum(1 for ln in LABELS_PATH.read_text(encoding="utf-8").splitlines() if ln.strip())
+        print(f"人工责任/执行标注 {n} 条（{LABELS_PATH.name}）")
+        print("人工类型判定见 data/samples/B-04-labels-0002.jsonl（一条消息一行，不在本脚本校验范围内）")
     print(f"边界案例通过 {len(edge_pass)}/{len(edge)}")
     if failures:
         print(f"失败项 {failures} 个")
         return 1
     if not real:
-        print("注意：当前没有真实记录样本，仅边界案例通过——不构成验收所需的「20 条真实记录」")
+        print("本次只校验了边界案例；真实记录请加 --file data/samples/B-04-real-records.jsonl")
     print("全部通过：schema 能表达全部用例，无需临时加字段")
     return 0
 
