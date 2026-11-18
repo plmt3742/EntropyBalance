@@ -1,0 +1,219 @@
+{
+  "version": "0.1",
+  "note": "人物编号与称呼的事实来源：data/samples/SOURCE.md §3 脱敏映射表、§5.1 跨群同一人。",
+  "persons": {
+    "P01": {
+      "groups": [
+        "甲",
+        "乙",
+        "丙"
+      ],
+      "aliases": [
+        "霹雳马桶",
+        "老板"
+      ],
+      "evidence": "SOURCE §5.1：同一个人的两个称呼，跨三个群"
+    },
+    "P02": {
+      "groups": [
+        "甲",
+        "丙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3：执行对接"
+    },
+    "P03": {
+      "groups": [
+        "甲"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P04": {
+      "groups": [
+        "甲",
+        "丙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §5.1"
+    },
+    "P05": {
+      "groups": [
+        "甲",
+        "丙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §5.1"
+    },
+    "P06": {
+      "groups": [
+        "甲",
+        "丙"
+      ],
+      "aliases": [
+        "随便啦"
+      ],
+      "evidence": "SOURCE §5.1：无意义昵称，只能靠上下文判断它指人"
+    },
+    "P07": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P08": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P09": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3：发通知的人"
+    },
+    "P10": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P11": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P12": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P13": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3"
+    },
+    "P14": {
+      "groups": [
+        "乙"
+      ],
+      "aliases": [],
+      "evidence": "SOURCE §3：被提及的第三人（原为真实姓名）"
+    },
+    "P15": {
+      "groups": [
+        "丙"
+      ],
+      "aliases": [
+        "Eli霖"
+      ],
+      "evidence": "SOURCE §3"
+    },
+    "P17": {
+      "groups": [
+        "丙"
+      ],
+      "aliases": [
+        "展铭师兄",
+        "师兄A"
+      ],
+      "evidence": "SOURCE §3"
+    },
+    "P18": {
+      "groups": [
+        "丙"
+      ],
+      "aliases": [
+        "评委",
+        "老师"
+      ],
+      "evidence": "SOURCE §5.1：同一人既是评委又被调侃为老师"
+    },
+    "P19": {
+      "groups": [
+        "丙"
+      ],
+      "aliases": [
+        "评委"
+      ],
+      "evidence": "SOURCE §3：三名评委之一"
+    },
+    "P20": {
+      "groups": [
+        "丙"
+      ],
+      "aliases": [
+        "评委"
+      ],
+      "evidence": "SOURCE §3：三名评委之一"
+    }
+  },
+  "groups": {
+    "D-志愿站": {
+      "surface": [
+        "志愿站"
+      ],
+      "kind": "department"
+    },
+    "D-办公室": {
+      "surface": [
+        "办公室"
+      ],
+      "kind": "department"
+    },
+    "D-运营组": {
+      "surface": [
+        "运营组"
+      ],
+      "kind": "department"
+    },
+    "D-技术组": {
+      "surface": [
+        "技术组"
+      ],
+      "kind": "department"
+    },
+    "D-自律部": {
+      "surface": [
+        "自律部"
+      ],
+      "kind": "department"
+    },
+    "D-外联": {
+      "surface": [
+        "外联部",
+        "外联"
+      ],
+      "kind": "department"
+    }
+  },
+  "roles_fixed": {
+    "老师A": "P18",
+    "师兄A": "P17",
+    "展铭师兄": "P17"
+  },
+  "roles_ambiguous": {
+    "评委": [
+      "P18",
+      "P19",
+      "P20"
+    ],
+    "队长": "unknown",
+    "主持人": "unknown",
+    "负责人": "unknown",
+    "组织者": "P01",
+    "联系人": "unknown",
+    "对接人": "unknown"
+  }
+}
