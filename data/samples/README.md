@@ -85,3 +85,4 @@
 | 2026-11-18 | 新增 `B-04-time-labels.jsonl`（26 句时间标注），checker 增加 `check_time_labels` | 时间归一是验收项；实测 9 条时间词不含日期，且同一句「下周日」出现两种读法 |
 | 2026-11-18 | schema v0.1.4：`TimeRef.week_rule` 锁死 `natural_week`；`B-04-time-labels.jsonl` 里 R-123 改判 `unknown` | 「下周」有两种读法，光写文档不管用，必须做成必填枚举 |
 | 2026-11-18 | 新增 `B-04-rules.jsonl`（10 条争议规则）；schema v0.1.5 明确占位符记 no_assertion | 工作坊未召开，规则改为单人书面决议（findings §8.2） |
+| 2026-11-18 | 17 条占位符 skipped 由 unverifiable_reference 改为 no_assertion（B-04 §8.2-9） | 规则与数据必须一致；附件丢失改由 SOURCE.md 说明 |
