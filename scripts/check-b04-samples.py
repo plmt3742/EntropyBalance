@@ -372,9 +372,11 @@ def check_message_coverage(samples: list[dict]) -> list[str]:
 
 LABELS_PATH = ROOT / "data" / "samples" / "B-04-owner-labels.jsonl"
 DEP_LABELS_PATH = ROOT / "data" / "samples" / "B-04-dependency-labels.jsonl"
+TIME_LABELS_PATH = ROOT / "data" / "samples" / "B-04-time-labels.jsonl"
 REAL_RECORDS_PATH = ROOT / "data" / "samples" / "B-04-real-records.jsonl"
 LABEL_KINDS = {"known", "ambiguous", "group", "missing", "not_needed"}
 DEPENDENCY_KINDS = {"precedence", "resource", "approval", "information"}
+TIME_CHOICES = {"date", "timeonly", "vague", "unknown", "already"}
 PERSON_RE = re.compile(r"^P\d{2}$")
 
 
@@ -463,6 +465,45 @@ def check_dependency_labels(path: Path, records_path: Path) -> list[str]:
     return errs
 
 
+def check_time_labels(path: Path, records_path: Path) -> list[str]:
+    """人工时间标注的合法性：行号必须在记录内、选项合法、选了日期就必须有日期且格式对。"""
+    if not path.exists() or not records_path.exists():
+        return []
+    records = [json.loads(ln) for ln in records_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    nlines = {s.get("record", {}).get("record_id"): len((s.get("text") or "").split("\n")) for s in records}
+    errs: list[str] = []
+    seen: set[tuple[str, int]] = set()
+    for ln, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        try:
+            r = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            errs.append(f"{path.name}:{ln} 不是合法 JSON（{exc}）")
+            continue
+        rid, mi = r.get("sample_id"), r.get("message_index")
+        if rid not in nlines:
+            errs.append(f"{path.name}:{ln} 记录不存在：{rid}")
+            continue
+        if not isinstance(mi, int) or not (0 <= mi < nlines[rid]):
+            errs.append(f"{path.name}:{ln} 行号越界：{rid}#{mi}（该记录共 {nlines[rid]} 行）")
+        if (rid, mi) in seen:
+            errs.append(f"{path.name}:{ln} 同一句重复标注：{rid}#{mi}")
+        seen.add((rid, mi))
+        choice, date = r.get("choice"), r.get("date")
+        if choice not in TIME_CHOICES:
+            errs.append(f"{path.name}:{ln} choice 非法：{choice}")
+            continue
+        if choice == "date":
+            if not date:
+                errs.append(f"{path.name}:{ln} choice=date 但没给日期")
+            elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(date)):
+                errs.append(f"{path.name}:{ln} 日期格式应为 YYYY-MM-DD：{date}")
+        elif date:
+            errs.append(f"{path.name}:{ln} choice={choice} 却带了日期 {date}")
+    return errs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", type=Path, default=DEFAULT_SAMPLES)
@@ -480,7 +521,8 @@ def main() -> int:
     structural = (check_cycle_groups(samples) + check_expanded_schema(samples)
                   + check_message_coverage(samples)
                   + check_owner_labels(LABELS_PATH, REAL_RECORDS_PATH)
-                  + check_dependency_labels(DEP_LABELS_PATH, REAL_RECORDS_PATH))
+                  + check_dependency_labels(DEP_LABELS_PATH, REAL_RECORDS_PATH)
+                  + check_time_labels(TIME_LABELS_PATH, REAL_RECORDS_PATH))
     if structural:
         for e in structural:
             print(f"[FAIL] 结构: {e}")

@@ -11,6 +11,7 @@
 | `B-04-labels-0002.jsonl` | **人工**对 399 条消息的类型判定（v2.1 定稿）：skipped 263 / status_update 70 / task 53 / decision 10 / discussion 2 / commitment 1 | 标注人 0002 逐条点击完成，单标注人、未测一致率（见 `SOURCE.md` §5.2） |
 | `B-04-owner-labels.jsonl` | **人工**责任/执行角色标注 119 行（83 条责任 = accountable + 36 条执行 = executor），字段 `sample_id/cid/role/kind/persons` | 两轮人工标注（R1/R2 2026-11-18），结论见 findings §3.4.1 |
 | `B-04-dependency-labels.jsonl` | **人工**依赖标注 36 行（14 条有依赖），字段 `wait/depends_on_cid/depends_on_label/kind` | 第 3 轮人工标注（R3 2026-11-18），结论见 findings §3.5.1 |
+| `B-04-time-labels.jsonl` | **人工**时间标注 26 行（16 定到日期 / 9 口头语 / 1 只有时刻），字段 `message_index/choice/date/flag` | 第 4 轮人工标注（R4 2026-11-18），结论见 findings §3.6.1 |
 
 ## 计划内容
 
@@ -80,3 +81,4 @@
 | 2026-11-18 | 候选数 90 → 408（补齐 318 条 skipped 候选），口径改为按消息记 | 每条消息都要有归属，漏抽才能被算出来 |
 | 2026-11-18 | 新增 `B-04-labels-0002.jsonl`（399 条消息判定）与 `B-04-owner-labels.jsonl`（119 行责任/执行标注） | 人工标注是验收项，且必须由人完成；单独成文件便于多轮与复核 |
 | 2026-11-18 | 新增 `B-04-dependency-labels.jsonl`（36 条依赖），checker 增加 `check_dependency_labels` | 依赖是验收项之一；实测 12/14 指向记录之外，`precedence` 为 0 |
+| 2026-11-18 | 新增 `B-04-time-labels.jsonl`（26 句时间标注），checker 增加 `check_time_labels` | 时间归一是验收项；实测 9 条时间词不含日期，且同一句「下周日」出现两种读法 |
