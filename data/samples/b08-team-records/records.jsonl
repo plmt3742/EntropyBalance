@@ -1,0 +1,33 @@
+{"id":"R001","kind":"meeting","occurred_at":"2026-09-08","participants":["P01","P02","P03","P04","P05","P06","P07"],"synthetic":true,"text":"第一次碰头，先把分工定一下。P01 统筹和对外，P02 前端，P03 后端，P04 界面，P05 数据和图表，P06 文档和答辩材料，P07 测试。P08 这学期课多，先跟着做测试。下周之前每人把自己那块的方案发群里。"}
+{"id":"R002","kind":"chat","occurred_at":"2026-09-11","participants":["P02","P04"],"synthetic":true,"text":"P02：登录页的稿子好了吗，我这边等着切图\nP04：今晚能出，先给你首页的\nP02：行，那我先搭框架"}
+{"id":"R003","kind":"meeting","occurred_at":"2026-09-12","participants":["P01","P03","P05"],"synthetic":true,"text":"服务器的事 P03 去问问学长，能不能借用实验室那台。备案没下来之前，外网访问先别想。P05 说数据这块先在自己电脑上跑，跑通了再说。"}
+{"id":"R004","kind":"chat","occurred_at":"2026-09-15","participants":["P01","P06"],"synthetic":true,"text":"P06：老师那边催进度表了\nP01：我今晚填，明天上午发你\nP06：好，我拿到再往学院系统里传"}
+{"id":"R005","kind":"task","occurred_at":"2026-09-16","participants":["P01","P06"],"synthetic":true,"text":"整理 9 月进度表，9 月 16 日前提交。P01 填表，P06 拿到后上传学院系统。"}
+{"id":"R006","kind":"meeting","occurred_at":"2026-09-18","participants":["P01","P02","P03","P04","P05","P06","P07","P08"],"synthetic":true,"text":"这周进度：前端框架搭完了，后端接口写了一部分，界面还在改。P07 提了几个 bug，P02 说下周修。P08 问能不能先给他一份接口文档，他想写测试用例。P03 说文档还没整理。"}
+{"id":"R007","kind":"chat","occurred_at":"2026-09-19","participants":["P03","P08"],"synthetic":true,"text":"P08：接口文档大概什么时候能有\nP03：这周忙，回头弄\nP08：那我先照页面点着测"}
+{"id":"R008","kind":"meeting","occurred_at":"2026-09-22","participants":["P01","P02","P04","P05"],"synthetic":true,"text":"聊首页改版。P04 出了两版，大家倾向第二版，配色还要调。P05 说图表那块得等 P04 定稿再动，不然尺寸对不上。P01 说这周先不定，等下次评审再说。"}
+{"id":"R009","kind":"chat","occurred_at":"2026-09-24","participants":["P01","P02","P03","P04","P05","P06","P07"],"synthetic":true,"text":"P01：老师说 10 月中旬要交一版能跑的\nP02：那前端得加快\nP06：文档我这边同步写\nP07：测试环境谁来搭？现在只有 P03 电脑能跑起来\nP03：我来吧"}
+{"id":"R010","kind":"meeting","occurred_at":"2026-09-26","participants":["P02","P04"],"synthetic":true,"text":"过了一遍交互稿。返回键的位置有争议，先按 P04 的来。P02 说切图要标注，不然还原度低。P04 说标注周末给。"}
+{"id":"R011","kind":"chat","occurred_at":"2026-09-29","participants":["P05","P01"],"synthetic":true,"text":"P05：数据清洗跑了两天，还是有几个字段对不上\nP01：要不要找 P03 看看，他之前处理过\nP05：我先自己看看"}
+{"id":"R012","kind":"meeting","occurred_at":"2026-10-08","participants":["P01","P02","P03","P04","P05","P06","P07","P08"],"synthetic":true,"text":"国庆回来第一次会。P02 说首页切图没收到，P04 说发了，发在私聊里。重新建了个共享文件夹。P06 说文档还差实验部分，得等 P05 的数据结果。P08 说测试用例写了十几条，接口一直没定，先放着。"}
+{"id":"R013","kind":"chat","occurred_at":"2026-10-09","participants":["P04","P02"],"synthetic":true,"text":"P04：切图传共享盘了，标注在第二页\nP02：收到，我今晚套\nP04：辛苦了"}
+{"id":"R014","kind":"task","occurred_at":"2026-10-10","participants":["P03","P02"],"synthetic":true,"text":"补齐后端注册登录接口，10 月 12 日前提交。P03 负责，P02 联调。"}
+{"id":"R015","kind":"meeting","occurred_at":"2026-10-12","participants":["P01","P03","P05","P06"],"synthetic":true,"text":"联调卡在登录接口上，P02 说返回的字段名和文档对不上。P03 说文档是旧的，今晚改。P05 的数据结果出来了，图表还没画。P06 问实验部分能不能先写方法，结果等图出来再填。"}
+{"id":"R016","kind":"chat","occurred_at":"2026-10-13","participants":["P03","P02"],"synthetic":true,"text":"P03：接口改完了，你拉一下最新代码\nP02：好，我这边跑通了跟你说"}
+{"id":"R017","kind":"meeting","occurred_at":"2026-10-15","participants":["P01","P02","P03","P04","P06","P07"],"synthetic":true,"text":"评审前一晚。P01 过了一遍演示流程，发现投屏分辨率不够。P06 的 PPT 还差两页，今晚补。P07 说有两个 bug 没修完，P02 说演示时先避开那个页面。P04 没来，配色的事先搁着。"}
+{"id":"R018","kind":"chat","occurred_at":"2026-10-16","participants":["P01","P06","P07"],"synthetic":true,"text":"P06：PPT 发群里了，最后一页数据先空着\nP01：明天 P05 到了再补\nP07：演示前我再点一遍，有问题喊你们"}
+{"id":"R019","kind":"meeting","occurred_at":"2026-10-20","participants":["P01","P02","P03","P04","P05","P06","P07","P08"],"synthetic":true,"text":"评审结果一般，评委说创新点不够。讨论要不要加个新模块。P05 说加可以，但数据得重新弄，至少两周。P01 说先别定，等老师意见。P04 说界面已经第五版了，再改要乱。"}
+{"id":"R020","kind":"chat","occurred_at":"2026-10-22","participants":["P01","P03"],"synthetic":true,"text":"P01：学长说实验室那台机器月底要还\nP03：那我们得赶紧把服务迁出来\nP01：你先看看能不能迁到云上\nP03：我看看"}
+{"id":"R021","kind":"meeting","occurred_at":"2026-10-23","participants":["P02","P03","P05"],"synthetic":true,"text":"迁移方案。P03 说云服务器要走学院审批，大概一周。P05 说数据不能传公网，得先脱敏。P02 说前端不用改。结论：P03 先提审批，批下来再动。"}
+{"id":"R022","kind":"chat","occurred_at":"2026-10-27","participants":["P04","P06"],"synthetic":true,"text":"P06：文档里界面截图太糊了，能重截吗\nP04：可以，等我这边改完配色一起截\nP06：大概什么时候\nP04：这周吧"}
+{"id":"R023","kind":"meeting","occurred_at":"2026-10-29","participants":["P01","P02","P03","P04","P05","P06","P07","P08"],"synthetic":true,"text":"月度复盘。P01 说进度比计划慢了大概十天。P07 说测试用例还是不够，接口改了三次。P08 说自己这学期基本没参与，问要不要退出。P01 说先留着，后面帮忙做答辩记录。"}
+{"id":"R024","kind":"chat","occurred_at":"2026-11-03","participants":["P05","P06"],"synthetic":true,"text":"P05：图出完了，一共六张，在共享盘 data 下面\nP06：收到，我今晚填到文档里\nP05：有张图的数据我还没复核，先别用\nP06：那我先放前五张"}
+{"id":"R025","kind":"meeting","occurred_at":"2026-11-05","participants":["P01","P02","P04","P06"],"synthetic":true,"text":"答辩分工。P06 主讲，P01 答技术问题，P02 现场演示，P04 负责海报和展板。P06 说讲稿要等 P01 定完技术口径再写，不然前后对不上。P01 说明天给。"}
+{"id":"R026","kind":"task","occurred_at":"2026-11-06","participants":["P06","P01"],"synthetic":true,"text":"写答辩讲稿初稿，11 月 8 日前完成。P06 负责，依赖 P01 的技术口径说明。"}
+{"id":"R027","kind":"chat","occurred_at":"2026-11-09","participants":["P01","P06","P02"],"synthetic":true,"text":"P01：口径我发你了，看下有没有问题\nP06：收到，我按这个改讲稿\nP02：演示脚本要不要也一起改\nP01：先不用，等讲稿定了再对"}
+{"id":"R028","kind":"meeting","occurred_at":"2026-11-11","participants":["P01","P02","P03","P04","P05","P06","P07"],"synthetic":true,"text":"彩排。讲稿超时两分钟，P06 说删一页。演示环节 P02 那边网络断了，临时改用本地版本。P05 说如果评委问数据来源，他来讲。P07 记了几个可能被问到的问题，说回头整理给 P06。"}
+{"id":"R029","kind":"chat","occurred_at":"2026-11-13","participants":["P06","P07"],"synthetic":true,"text":"P07：问题清单整理好了，一共十一个\nP06：辛苦，我今晚过一遍\nP07：有两个我不太确定，标黄了"}
+{"id":"R030","kind":"meeting","occurred_at":"2026-11-14","participants":["P01","P02","P03","P04","P05","P06","P07","P08"],"synthetic":true,"text":"答辩结束了。评委问了三件事：数据从哪来、和现成工具有什么区别、能不能现场加一个人试试。第三个没答好。P01 说材料先归档，P08 负责把录音和照片收一下。散会。"}
+{"id":"R031","kind":"chat","occurred_at":"2026-11-10","participants":["P01","P02","P03","P04","P05"],"synthetic":false,"text":"P03：【座椅搬运、课室选择】6e308、6e307、6e306 均为大型阶梯教室，预计可纳 300 人左右\n6d301-304、6d307、6d308 智慧教室，有可移动桌椅\n建议从这些批次的教室中选取作为租借教室\n6E 与 6D 三楼之间有连通通道，因此桌椅搬运比较方便，详细见以下视频\n[图片：6D304 智慧教室门牌]\n[视频 0:37]\nP03：@所有人 把比赛时间、比赛场地、各队情况、比赛辩题等信息在这个群里面发一下留作备份以及方便后续同步使用\nP03：【关于麦克风】需要确认上次的麦克风在谁那里，并检查是否有电、是否能正常使用"}
+{"id":"R032","kind":"chat","occurred_at":"2026-11-12","participants":["P02","P04","P05"],"synthetic":false,"text":"P04：@P02 指导教师办公室学活门牌号是多少\nP04：老师让我去送个文件\nP05：老师在办公室么\nP04：我去看看\nP04：我刚要过去\nP04：@P05 不在"}
+{"id":"R033","kind":"chat","occurred_at":"2026-11-12","participants":["P02","P04","P05"],"synthetic":false,"text":"P05：行\nP02：206吧好像是\nP04：ok"}

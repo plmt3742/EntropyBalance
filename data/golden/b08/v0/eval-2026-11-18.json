@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-18",
+  "prompt_version": "v1",
+  "judge": "independent blind pass (separate session, same model family)",
+  "corpus": "data/samples/b08-team-records/records.jsonl",
+  "gold": "data/golden/b08/v0/sentences.jsonl",
+  "pred": "data/golden/b08/v0/pred-2026-11-18.jsonl",
+  "counts": {
+    "gold_dep": 38,
+    "gold_commit": 31,
+    "gold_none": 31,
+    "pred_dep": 28,
+    "pred_commit": 22
+  },
+  "metrics": {
+    "hard_precision": 0.818,
+    "weak_precision": 0,
+    "direction_error_rate": 0,
+    "false_positive_rate": 0.161,
+    "commit_precision": 0.773,
+    "commit_recall": 0.548,
+    "weak_recall": 0,
+    "missed": 12
+  },
+  "note": "方向等价性由人工判定：模型用任务名、标注用任务名加责任人，语义相同记正确。"
+}
