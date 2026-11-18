@@ -60,6 +60,9 @@ DICTIONARY = {
         "P18": {"groups": ["丙"], "aliases": ["评委", "老师"], "evidence": "SOURCE §5.1：同一人既是评委又被调侃为老师"},
         "P19": {"groups": ["丙"], "aliases": ["评委"], "evidence": "SOURCE §3：三名评委之一"},
         "P20": {"groups": ["丙"], "aliases": ["评委"], "evidence": "SOURCE §3：三名评委之一"},
+        "EXT-老师A": {"groups": ["甲"], "aliases": ["老师A", "田姐", "老师"],
+                      "kind": "external_person",
+                      "evidence": "SOURCE §3：田姐→老师A；注意 SOURCE §5.1 里 P18 也被玩笑称「老师」，两者不是同一人"},
     },
     "groups": {
         "D-志愿站": {"surface": ["志愿站"], "kind": "department"},
@@ -69,8 +72,9 @@ DICTIONARY = {
         "D-自律部": {"surface": ["自律部"], "kind": "department"},
         "D-外联": {"surface": ["外联部", "外联"], "kind": "department"},
     },
-    "roles_fixed": {"老师A": "P18", "师兄A": "P17", "展铭师兄": "P17"},
+    "roles_fixed": {"老师A": "EXT-老师A", "田姐": "EXT-老师A", "师兄A": "P17", "展铭师兄": "P17"},
     "roles_ambiguous": {
+        "老师": ["EXT-老师A", "P18"],
         "评委": ["P18", "P19", "P20"],
         "队长": "unknown",
         "主持人": "unknown",

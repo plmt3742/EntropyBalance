@@ -34,7 +34,7 @@ AT_ALL_RE = re.compile(r"@所有人")
 AT_PID_RE = re.compile(r"@(P\d{2})")
 
 DEPARTMENTS = ["志愿站", "办公室", "运营组", "技术组", "自律部", "外联部", "外联"]
-ROLES = ["老师A", "师兄A", "队长", "评委", "主持人", "负责人", "组织者", "联系人", "对接人"]
+ROLES = ["老师A", "田姐", "老师", "师兄A", "队长", "评委", "主持人", "负责人", "组织者", "联系人", "对接人"]
 PRONOUNS = ["他们", "她们", "大家", "你们", "咱们", "他", "她"]
 
 
@@ -64,21 +64,21 @@ def mentions_in_line(line: str, base: int):
             continue  # 已由 at_person 记录
         found.append(("person_id", m.group(0), base + m.start(), base + m.end()))
 
-    for word in DEPARTMENTS:
-        for m in re.finditer(re.escape(word), line):
-            found.append(("department", word, base + m.start(), base + m.end()))
-    for word in ROLES:
-        for m in re.finditer(re.escape(word), line):
-            found.append(("role", word, base + m.start(), base + m.end()))
-    # 代词放在最后，且避开已被更长词覆盖的位置（如「他们」包含「他」）
-    taken = [(s, e) for _, _, s, e in found]
-    for word in PRONOUNS:
-        for m in re.finditer(re.escape(word), line):
-            s, e = base + m.start(), base + m.end()
-            if any(s < te and ts < e for ts, te in taken):
-                continue
-            found.append(("pronoun", word, s, e))
-            taken.append((s, e))
+    # 部门词、职务词、代词统一收集后做「最长匹配优先、互不重叠」，
+    # 否则「老师A」会被「老师」重复算一次、「他们」会被「他」重复算一次。
+    vocab = [(w, "department") for w in DEPARTMENTS] + [(w, "role") for w in ROLES] \
+        + [(w, "pronoun") for w in PRONOUNS]
+    vocab.sort(key=lambda x: -len(x[0]))
+    for word, kind in vocab:
+        start = 0
+        while True:
+            idx = line.find(word, start)
+            if idx < 0:
+                break
+            s0, e0 = base + idx, base + idx + len(word)
+            if not any(s0 < e1 and s1 < e0 for _, _, s1, e1 in found):
+                found.append((kind, word, s0, e0))
+            start = idx + len(word)
     return sorted(found, key=lambda x: x[2])
 
 
