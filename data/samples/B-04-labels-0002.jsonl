@@ -1,0 +1,399 @@
+{"sample_id": "R-101", "message_index": 0, "label": "decision", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 1, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 2, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 3, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 4, "label": "skipped", "source": "v2", "sub": "placeholder"}
+{"sample_id": "R-101", "message_index": 5, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 6, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 7, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 8, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-101", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 11, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-101", "message_index": 12, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 0, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 1, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 2, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 3, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 4, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 5, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-102", "message_index": 6, "label": "decision", "source": "v1（未经复核）"}
+{"sample_id": "R-103", "message_index": 0, "label": "status_update", "source": "v2"}
+{"sample_id": "R-103", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-103", "message_index": 2, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 0, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 1, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 2, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 3, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 4, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 5, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 6, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 7, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 11, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-104", "message_index": 12, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 0, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 1, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 2, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 3, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 4, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 5, "label": "status_update", "source": "v2.1-人工裁决"}
+{"sample_id": "R-105", "message_index": 6, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 7, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 9, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 10, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-105", "message_index": 11, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 0, "label": "skipped", "source": "v2", "sub": "placeholder"}
+{"sample_id": "R-106", "message_index": 1, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 2, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 3, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 4, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 6, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 7, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 10, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 11, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 12, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 13, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-106", "message_index": 14, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 0, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 1, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 2, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 3, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 4, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 5, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 6, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 7, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 8, "label": "task", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 10, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 11, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 12, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-107", "message_index": 13, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 0, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 1, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 2, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 3, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 4, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 6, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 7, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 11, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 12, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 13, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 14, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 15, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 16, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-108", "message_index": 17, "label": "status_update", "source": "v1（未经复核）"}
+{"sample_id": "R-109", "message_index": 0, "label": "status_update", "source": "v2"}
+{"sample_id": "R-109", "message_index": 1, "label": "skipped", "source": "v2.1-人工裁决", "sub": "question"}
+{"sample_id": "R-109", "message_index": 2, "label": "discussion", "source": "v2.1-人工裁决", "about": "要不要继续比", "note": "标注人自注：有抱怨的意思，不完全是争论"}
+{"sample_id": "R-109", "message_index": 3, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 4, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 5, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 6, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 7, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 8, "label": "status_update", "source": "v2"}
+{"sample_id": "R-109", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-109", "message_index": 10, "label": "status_update", "source": "v2"}
+{"sample_id": "R-109", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-109", "message_index": 12, "label": "status_update", "source": "v2"}
+{"sample_id": "R-109", "message_index": 13, "label": "task", "source": "v2"}
+{"sample_id": "R-109", "message_index": 14, "label": "task", "source": "v2"}
+{"sample_id": "R-109", "message_index": 15, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-109", "message_index": 16, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 0, "label": "commitment", "source": "v2.1-人工裁决"}
+{"sample_id": "R-110", "message_index": 1, "label": "discussion", "source": "v2.1-人工裁决", "about": "要不要去争取延期"}
+{"sample_id": "R-110", "message_index": 2, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-110", "message_index": 3, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-110", "message_index": 5, "label": "task", "source": "v2"}
+{"sample_id": "R-110", "message_index": 6, "label": "status_update", "source": "v2"}
+{"sample_id": "R-110", "message_index": 7, "label": "status_update", "source": "v2"}
+{"sample_id": "R-110", "message_index": 8, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 9, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-110", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-110", "message_index": 12, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 13, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 14, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 15, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 16, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-110", "message_index": 17, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-111", "message_index": 0, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-111", "message_index": 1, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-111", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-111", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-111", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-111", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-111", "message_index": 6, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-111", "message_index": 7, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-111", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-111", "message_index": 9, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-111", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-112", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-112", "message_index": 1, "label": "status_update", "source": "v2"}
+{"sample_id": "R-112", "message_index": 2, "label": "status_update", "source": "v2"}
+{"sample_id": "R-112", "message_index": 3, "label": "status_update", "source": "v2"}
+{"sample_id": "R-112", "message_index": 4, "label": "status_update", "source": "v2"}
+{"sample_id": "R-112", "message_index": 5, "label": "task", "source": "v2"}
+{"sample_id": "R-112", "message_index": 6, "label": "decision", "source": "v2"}
+{"sample_id": "R-112", "message_index": 7, "label": "decision", "source": "v2"}
+{"sample_id": "R-112", "message_index": 8, "label": "decision", "source": "v2"}
+{"sample_id": "R-112", "message_index": 9, "label": "decision", "source": "v2"}
+{"sample_id": "R-112", "message_index": 10, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-113", "message_index": 0, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-113", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-113", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-113", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-113", "message_index": 4, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-113", "message_index": 5, "label": "task", "source": "v2"}
+{"sample_id": "R-113", "message_index": 6, "label": "task", "source": "v2"}
+{"sample_id": "R-113", "message_index": 7, "label": "task", "source": "v2"}
+{"sample_id": "R-113", "message_index": 8, "label": "task", "source": "v2"}
+{"sample_id": "R-113", "message_index": 9, "label": "task", "source": "v2"}
+{"sample_id": "R-113", "message_index": 10, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-113", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 0, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 1, "label": "decision", "source": "v2"}
+{"sample_id": "R-114", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-114", "message_index": 6, "label": "task", "source": "v2"}
+{"sample_id": "R-114", "message_index": 7, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-114", "message_index": 8, "label": "task", "source": "v2"}
+{"sample_id": "R-114", "message_index": 9, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 10, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-114", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-115", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 2, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 3, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 4, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 5, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 6, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 7, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 8, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 9, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 10, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-115", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 14, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 15, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-115", "message_index": 16, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 0, "label": "task", "source": "v2"}
+{"sample_id": "R-116", "message_index": 1, "label": "status_update", "source": "v2"}
+{"sample_id": "R-116", "message_index": 2, "label": "task", "source": "v2"}
+{"sample_id": "R-116", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 4, "label": "skipped", "source": "v2", "sub": "placeholder"}
+{"sample_id": "R-116", "message_index": 5, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 6, "label": "skipped", "source": "v2", "sub": "placeholder"}
+{"sample_id": "R-116", "message_index": 7, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 8, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 9, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 10, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-116", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 14, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-116", "message_index": 15, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 16, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 17, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 18, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 19, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 20, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 21, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 22, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 23, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 24, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 25, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 26, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 27, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 28, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-116", "message_index": 29, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 0, "label": "task", "source": "v2"}
+{"sample_id": "R-117", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-117", "message_index": 2, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-117", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 5, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-117", "message_index": 6, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 7, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 8, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 9, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-117", "message_index": 10, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-117", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 14, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 15, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 16, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 17, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 18, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-117", "message_index": 19, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-118", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-118", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-118", "message_index": 2, "label": "task", "source": "v2"}
+{"sample_id": "R-118", "message_index": 3, "label": "task", "source": "v2"}
+{"sample_id": "R-119", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-119", "message_index": 1, "label": "decision", "source": "v2"}
+{"sample_id": "R-119", "message_index": 2, "label": "decision", "source": "v2"}
+{"sample_id": "R-119", "message_index": 3, "label": "decision", "source": "v2"}
+{"sample_id": "R-119", "message_index": 4, "label": "skipped", "source": "v2.1-人工裁决", "sub": "emotion"}
+{"sample_id": "R-119", "message_index": 5, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-119", "message_index": 6, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-120", "message_index": 0, "label": "task", "source": "v2"}
+{"sample_id": "R-120", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-120", "message_index": 2, "label": "task", "source": "v2"}
+{"sample_id": "R-120", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-120", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-120", "message_index": 5, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-120", "message_index": 6, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-120", "message_index": 7, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-120", "message_index": 8, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-121", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-121", "message_index": 1, "label": "skipped", "source": "v2", "sub": "emotion"}
+{"sample_id": "R-121", "message_index": 2, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-121", "message_index": 3, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 4, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 5, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-121", "message_index": 6, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 7, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 8, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 9, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 10, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 11, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 12, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 13, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 14, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 15, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 16, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 17, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 18, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 19, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-121", "message_index": 20, "label": "task", "source": "v2"}
+{"sample_id": "R-121", "message_index": 21, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 22, "label": "status_update", "source": "v2"}
+{"sample_id": "R-121", "message_index": 23, "label": "status_update", "source": "v2"}
+{"sample_id": "R-122", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-122", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-122", "message_index": 2, "label": "task", "source": "v2"}
+{"sample_id": "R-122", "message_index": 3, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-122", "message_index": 4, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-122", "message_index": 5, "label": "status_update", "source": "v2"}
+{"sample_id": "R-122", "message_index": 6, "label": "status_update", "source": "v2"}
+{"sample_id": "R-122", "message_index": 7, "label": "status_update", "source": "v2"}
+{"sample_id": "R-123", "message_index": 0, "label": "task", "source": "v2"}
+{"sample_id": "R-123", "message_index": 1, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-123", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-123", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-124", "message_index": 0, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-124", "message_index": 1, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-124", "message_index": 2, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-124", "message_index": 3, "label": "task", "source": "v2"}
+{"sample_id": "R-124", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-124", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-124", "message_index": 6, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-124", "message_index": 7, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 0, "label": "task", "source": "v2.1-人工裁决"}
+{"sample_id": "R-125", "message_index": 1, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 2, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 3, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 4, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-125", "message_index": 6, "label": "task", "source": "v2"}
+{"sample_id": "R-126", "message_index": 0, "label": "task", "source": "v2"}
+{"sample_id": "R-126", "message_index": 1, "label": "task", "source": "v2"}
+{"sample_id": "R-126", "message_index": 2, "label": "task", "source": "v2"}
+{"sample_id": "R-126", "message_index": 3, "label": "status_update", "source": "v2"}
+{"sample_id": "R-126", "message_index": 4, "label": "status_update", "source": "v2"}
+{"sample_id": "R-126", "message_index": 5, "label": "status_update", "source": "v2"}
+{"sample_id": "R-126", "message_index": 6, "label": "status_update", "source": "v2"}
+{"sample_id": "R-126", "message_index": 7, "label": "status_update", "source": "v2"}
+{"sample_id": "R-126", "message_index": 8, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 9, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 10, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 11, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 14, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 15, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 16, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 17, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 18, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 19, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 20, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 21, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 22, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-126", "message_index": 23, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-127", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 4, "label": "status_update", "source": "v2"}
+{"sample_id": "R-127", "message_index": 5, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 6, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 7, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 8, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 9, "label": "status_update", "source": "v2"}
+{"sample_id": "R-127", "message_index": 10, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-127", "message_index": 11, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-127", "message_index": 14, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-127", "message_index": 15, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 16, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-127", "message_index": 17, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 18, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 19, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 20, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 21, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-127", "message_index": 22, "label": "skipped", "source": "v1（未经复核）"}
+{"sample_id": "R-128", "message_index": 0, "label": "skipped", "source": "v2", "sub": "question"}
+{"sample_id": "R-128", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 5, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 6, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 7, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 8, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-128", "message_index": 9, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-128", "message_index": 10, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 11, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-128", "message_index": 12, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 13, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 14, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 15, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-128", "message_index": 16, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 0, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 5, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 6, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 7, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 8, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-129", "message_index": 9, "label": "status_update", "source": "v2"}
+{"sample_id": "R-129", "message_index": 10, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 11, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 12, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 13, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 14, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-129", "message_index": 15, "label": "skipped", "source": "v2", "sub": "filler"}
+{"sample_id": "R-130", "message_index": 0, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-130", "message_index": 1, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-130", "message_index": 2, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-130", "message_index": 3, "label": "skipped", "source": "v2", "sub": "other"}
+{"sample_id": "R-130", "message_index": 4, "label": "skipped", "source": "v2", "sub": "other"}
