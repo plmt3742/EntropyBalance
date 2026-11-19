@@ -1,5 +1,5 @@
 {
-  "version": "0.1",
+  "version": "0.2",
   "note": "人物编号与称呼的事实来源：data/samples/SOURCE.md §3 脱敏映射表、§5.1 跨群同一人。",
   "persons": {
     "P01": {
@@ -19,31 +19,39 @@
         "甲",
         "丙"
       ],
-      "aliases": [],
-      "evidence": "SOURCE §3：执行对接"
+      "aliases": [
+        "🦈"
+      ],
+      "evidence": "SOURCE §2.1（v0.7 补录的昵称）"
     },
     "P03": {
       "groups": [
         "甲"
       ],
-      "aliases": [],
-      "evidence": "SOURCE §3"
+      "aliases": [
+        "白夜"
+      ],
+      "evidence": "SOURCE §2.1（v0.7 补录的昵称）"
     },
     "P04": {
       "groups": [
         "甲",
         "丙"
       ],
-      "aliases": [],
-      "evidence": "SOURCE §5.1"
+      "aliases": [
+        "织葉"
+      ],
+      "evidence": "SOURCE §2.1（v0.7 补录的昵称）"
     },
     "P05": {
       "groups": [
         "甲",
         "丙"
       ],
-      "aliases": [],
-      "evidence": "SOURCE §5.1"
+      "aliases": [
+        "lyg"
+      ],
+      "evidence": "SOURCE §2.1（v0.7 补录的昵称）"
     },
     "P06": {
       "groups": [
