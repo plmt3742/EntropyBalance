@@ -91,7 +91,7 @@
 |---|---|---|---|---|
 | E08 | 内部设计 | `analysis-model.md` v0.1 §4 已规定「建议 = 图上的编辑 + 重算」，列出 reassign / add_backup / pair / split_role / document / defer-drop，要求每条给 ΔSPI、ΔHHI_norm、Δmax_load、orphaned 变化；代价 = 涉及人数 / 新增同步次数 / 预计工时。§2.2 的 SPI 写 `backup=∅`，§4 又说 document 后不再算唯一持有——两处口径不完全一致。 | `docs/20-architecture/analysis-model.md` | 2026-11-18 |
 | E09 | 内部设计 | `suggestion` 数据模型草案：id, issue_id, edit_ops, delta_metrics, cost_estimate；M7 建议模块；四原则（证据可追溯、数值由代码算、人在环、离线可演示）。 | `docs/20-architecture/system-overview.md` | 2026-11-18 |
-| E10 | 内部任务单 | B-11 §2.2 六项、§2.3 五项产出、§2.4 五条验收、§3 交互、§4 五条禁止；前置 B-09/B-10 未完成。 | `docs/30-research/briefs/B-11-suggestion-boundary.md` | 2026-11-18 |
+| E10 | 内部任务单 | B-11 §2.2 六项、§2.3 五项产出、§2.4 五条验收、§3 交互、§4 五条禁止；前置 B-09/B-10 未完成。 | B-11 任务单（队长维护，不在本仓库） | 2026-11-18 |
 
 ### 2.3 原型与试点证据（合成夹具 + B-04 微快照 + 1 人试点）
 

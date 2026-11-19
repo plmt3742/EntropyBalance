@@ -121,7 +121,7 @@ B-04 只回答一个问题：**把中文聊天记录喂给机器，能不能稳�
 | E-16 | — | "转述他人话"在中文里的处理 | 无 | **无源** | 未找到可引用的文献；本单按工程约定处理（`modality=quoted` + 进人工队列），不做学术声称 |
 | E-17 | 厂商社区帖 | RAID（Risks / Actions / Issues / Decisions）日志 | https://www.wrike.com/blog/raid-log/ | **C** | 只有厂商博文，未见规范或教材级来源；仅作术语提示 |
 | E-18 | 出版社书目 | DSM（设计结构矩阵）方法 | https://direct.mit.edu/books/monograph/3361/ | **C** | 只有书目页，正文付费墙；DSM 的"行列对应活动、格子表示依赖"属通行说法，但本单没拿到原书页码，故 §6 只用其结构直觉、不作字段依据 |
-| E-19 | 仓库内文档 | `docs/20-architecture/analysis-model.md` 三图与指标口径；`docs/30-research/briefs/B-05-eval-protocol.md` 标注单位与 κ | 仓库内 | — | 不涉外，作为本单的约束来源 |
+| E-19 | 仓库内文档 | `docs/20-architecture/analysis-model.md` 三图与指标口径；B-05 任务单约定的标注单位与 κ | 仓库内 | — | 不涉外，作为本单的约束来源 |
 
 > 使用限制（保留并收紧）：
 > ① 能支撑"关系要存单向"的是 E-01（A）+ E-11（A）；**不能**用它们支撑"中文里怎么说"。
