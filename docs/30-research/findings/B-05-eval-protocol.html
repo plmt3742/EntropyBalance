@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>B-05 评测协议</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "SimSun", sans-serif;
+  font-size: 10pt; line-height: 1.65; color: #1f2933;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1 { font-size: 19pt; text-align: center; margin: 4mm 0 5mm; line-height: 1.35; }
+h2 { font-size: 14pt; margin: 7mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.4pt solid #2f6fb0; page-break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 5mm 0 2mm; page-break-after: avoid; }
+p { margin: 2mm 0; text-align: justify; }
+ul, ol { margin: 2mm 0 2mm 7mm; padding-left: 0; }
+li { margin: 1mm 0; }
+table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 8.8pt; page-break-inside: auto; }
+th, td { border: 0.6pt solid #9aa5b1; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+th { background: #eef3f8; font-weight: 600; }
+tr { page-break-inside: avoid; }
+mark { background: #fff1a8; padding: 0 0.5mm; }
+sup { font-size: 7pt; color: #2f6fb0; }
+.formula { margin: 2.5mm 0; padding: 2mm 3mm; background: #f7f9fb; border-left: 2.5pt solid #2f6fb0; font-family: "Consolas", "Microsoft YaHei", monospace; font-size: 10pt; }
+.figure-svg { margin: 3mm 0 1mm; page-break-inside: avoid; }
+.figure-svg svg { width: 100%; height: auto; display: block; }
+img { max-width: 100%; page-break-inside: avoid; }
+.page-break { page-break-before: always; height: 0; margin: 0; }
+code { font-family: "Consolas", monospace; background: #f1f3f5; padding: 0 1mm; border-radius: 1mm; }
+blockquote { margin: 3mm 0; padding: 2mm 3mm; border-left: 2.5pt solid #9aa5b1; color: #444; }
+.toc { margin: 2mm 0; line-height: 1.75; }
+.toc-two { columns: 2; column-gap: 12mm; line-height: 1.7; }
+</style>
+</head>
+<body>
+<h1>B-05 抽取质量应如何评测：协议、标注规范与真值来源</h1>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>调研人</td>
+<td>Dtao</td>
+</tr>
+<tr>
+<td>完成日期</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>对应单子</td>
+<td>资料库「调研任务单」之 B-05-eval-protocol</td>
+</tr>
+<tr>
+<td>报告版本</td>
+<td>v1.0</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>部分完成：协议、规范与指标已定义；双人标注、一致性实测、错误分析与对照实验尚未完成</td>
+</tr>
+</tbody></table>
+<p><strong>数据标识说明：</strong> 本报告中的指标数值、区间、错误分布与对照结果均为<strong>模拟示例（S）</strong>，统一标记为“模拟示例（S）”。S 数据仅用于说明协议如何运作，不代表任何模型、任何团队的真实结果，也不构成“准确率”声明。真实双人标注取得后，应以相同口径重算并替换。任务单转引的外部数据（OSynth 归属准确率约 0.69、AMC-A 标注一致性约 0.47）标注为<strong>待核实</strong>，本报告未独立核验原始文献。</p>
+<p><strong>阅读说明：</strong> 第 1 节给出结论；第 2 节界定评测对象与真值来源；第 3 节给出可执行的评测协议；第 4 节说明对标注、裁决与报告界面的影响；第 5 至 7 节列出未决问题、下一步与验收对照；附录提供公式、规范目录与报告模板。</p>
+<h2>摘要</h2>
+<p>本报告回答三个问题：抽取质量以什么为单位评测、真值从哪里来、指标如何报告才不误导。结论是：评测必须分三层进行，主指标放在<strong>实例层</strong>与<strong>字段层</strong>，记录层只统计覆盖率；真值分为人工双标、人工单标加抽检、合成数据三级，三级结果分表报告，不得混算。</p>
+<p>协议的核心是一致性先行。两位标注者按同一份规范独立标注，先计算字段级一致性，再裁决分歧；一致性不达标的字段先修改规范或定义，不进入模型对比。模型指标只报告精确率、召回率与 F1，并附样本量与重采样区间；责任人字段同时报告“完全一致”与“可接受替代”两种口径。测试集按记录划分并锁定，调参阶段不可见。</p>
+<p>模拟示例表明，该协议能够区分字段难度、给出区间并暴露错误类型；但双人标注、一致性实测、50 个错误的分类与换模型对照实验尚未执行。因此本报告的结论属于方法层结论，不构成对任何模型准确率的结论。</p>
+<h2>目录</h2>
+<div class="toc">
+1. 结论<br>
+2. 术语与适用性<br>
+3. 评测协议建议<br>
+4. 对设计的影响<br>
+5. 未决问题<br>
+6. 下一步<br>
+7. 验收对照<br>
+附录 A 公式、规范与模板<br>
+注释
+</div><hr>
+<h2>1. 结论</h2>
+<ol>
+<li><strong>评测对象分为三层。</strong> 记录层回答“覆盖了多少材料”，实例层回答“任务与决定是否找全、找对”，字段层回答“责任人、依赖、证据是否准确”。主指标放在实例层与字段层，记录层只报告覆盖率与样本构成。</li>
+<li><strong>真值分为三级，结果分表报告。</strong> 一级为双人独立标注并经裁决的金标准<sup>[1]</sup>；二级为单人标注加抽检；三级为合成数据。一级数据可以支持“准确率”表述，二级只能支持“抽检估计”，三级只能支持方法演示。</li>
+<li><strong>三十条记录是最小可用集，不是充分集。</strong> 记录按类型（会议、群聊、任务描述）与长度分层抽样<sup>[2]</sup>，标注量按实例计。建议至少标注三百个任务实例、一百个决定实例，才能按字段分组报告。</li>
+<li><strong>一致性先于模型对比。</strong> 使用标注一致性系数<sup>[3]</sup>衡量两人是否按同一口径标注。任务边界与归属不低于 0.6，依赖方向与证据偏移不低于 0.5；未达标的字段先改规范，不进入模型评测。</li>
+<li><strong>指标只使用结构化口径。</strong> 任务与决定检测报告精确率<sup>[4]</sup>、召回率<sup>[5]</sup>与 F1<sup>[6]</sup>；责任人报告“完全一致”与“可接受替代”<sup>[7]</sup>双口径；依赖边报告带方向的 F1；证据偏移<sup>[8]</sup>报告命中率。通用文本相似度指标不作为主指标。</li>
+<li><strong>必须报告不确定性。</strong> 使用重采样<sup>[9]</sup>估计指标的置信区间<sup>[10]</sup>，同时报告样本量。只给点估计的评测结果不得用于上线判断。</li>
+<li><strong>测试集按记录划分并锁定。</strong> 开发集与测试集<sup>[11]</sup>的比例建议为七比三，按记录划分而不是按断言划分；测试集只在阶段性评测时打开，调参阶段界面不显示其指标。</li>
+<li><strong>换模型结论必须看区间。</strong> 两次评测的置信区间重叠时，只能表述为“未观察到显著差异”，不得表述为“变好”。错误分类固定为六类，覆盖不少于九成的实际错误。</li>
+</ol>
+<h2>2. 术语与适用性</h2>
+<h3>2.1 评测对象的三层结构</h3>
+<p>抽取系统的输出是一组结构化实例。评测需要先明确在哪一层比较，否则“准确率”无法定义。</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>评测单位</th>
+<th>回答的问题</th>
+<th>主要指标</th>
+<th>在本项目中的用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>记录层</td>
+<td>一份会议记录、一段群聊、一条任务描述</td>
+<td>材料是否被读取、是否产生输出</td>
+<td>覆盖率、空输出率、解析失败率</td>
+<td>判断数据是否可用，不作为质量结论</td>
+</tr>
+<tr>
+<td>实例层</td>
+<td>一个任务、一个决定、一条依赖边</td>
+<td>该找的是否找到，是否多找</td>
+<td>检测精确率、召回率、F1</td>
+<td>主指标，支撑“抽取是否可用”</td>
+</tr>
+<tr>
+<td>字段层</td>
+<td>实例的一个字段，如责任人、截止时间、证据位置</td>
+<td>字段值是否正确</td>
+<td>字段准确率、可接受替代率、证据偏移正确率</td>
+<td>定位错误来源，指导改规范或改提示词</td>
+</tr>
+</tbody></table>
+<p>三层的关系是包含关系：记录层回答输入是否有效，实例层回答对象是否找对，字段层回答属性是否填对。报告必须按三层分别呈现，不能用一个总分覆盖。</p>
+<h3>2.2 真值来源的三个等级</h3>
+<p>真值指用于比较的标准答案。不同来源能支持的结论强度不同。</p>
+<table>
+<thead>
+<tr>
+<th>等级</th>
+<th>获取方式</th>
+<th>可支持的结论</th>
+<th>不可支持的结论</th>
+<th>报告方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一级：双标金标准</td>
+<td>两人独立标注，逐条裁决并记录理由</td>
+<td>字段级准确率、区间估计、模型对比</td>
+<td>对未标注组织的推广</td>
+<td>单独成表，注明标注者人数与一致性</td>
+</tr>
+<tr>
+<td>二级：单标加抽检</td>
+<td>一人标注，另一人抽检两成</td>
+<td>抽检范围内的误差估计</td>
+<td>精确的字段级准确率</td>
+<td>单独成表，注明抽检比例</td>
+</tr>
+<tr>
+<td>三级：合成数据</td>
+<td>按预设模板生成记录与答案</td>
+<td>方法可行性、流程演示</td>
+<td>真实组织验证、产品准确率</td>
+<td>单独成表，显著标注“合成”</td>
+</tr>
+</tbody></table>
+<p>本报告后续所有数值均属第三级，仅用于演示协议，不得引用为真实准确率。</p>
+<h3>2.3 与通用文本评测的区别</h3>
+<p>通用文本生成常用相似度指标衡量输出与参考文本的接近程度。结构化抽取的评测目标不同，二者不能互相替代。</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>通用文本相似度指标</th>
+<th>本报告采用的结构化指标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>比较对象</td>
+<td>整段文本的用词重叠或语义接近</td>
+<td>实例是否存在、字段值是否相等、边方向是否正确</td>
+</tr>
+<tr>
+<td>对错误的敏感度</td>
+<td>同义改写不扣分，漏掉关键字段可能不扣分</td>
+<td>漏抽、错归属、方向错误分别计错</td>
+</tr>
+<tr>
+<td>适用结论</td>
+<td>文本流畅度、摘要接近度</td>
+<td>能否支撑负载计算与风险面板</td>
+</tr>
+<tr>
+<td>使用限制</td>
+<td>不能说明字段是否正确</td>
+<td>需要金标准与标注规范</td>
+</tr>
+</tbody></table>
+<p>任务单明确要求不以文本相似度指标代替结构化指标；如使用，只能作为辅助参考，不能出现在主表中。</p>
+<h3>2.4 适用条件与失效条件</h3>
+<p>适用条件：记录能够获得授权并脱敏<sup>[12]</sup>；同一批记录有明确的 schema 版本；标注者理解业务语境；评测脚本与数据版本可追溯。</p>
+<p>失效条件：标注者只有一人且无抽检；记录类型高度单一；schema 在标注期间发生变更；测试集被用于调参；只报告总分不报告样本量。出现任一条件时，评测结果只能作为内部参考，不得对外表述为准确率。</p>
+<h2>3. 评测协议建议</h2>
+<h3>3.1 标注单位与字段</h3>
+<p>标注单位建议采用“实例加字段”，不采用整条记录打分。整条记录打分无法定位错误，也无法指导修改。</p>
+<table>
+<thead>
+<tr>
+<th>标注对象</th>
+<th>标注单位</th>
+<th>必填字段</th>
+<th>允许可接受替代的字段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>任务</td>
+<td>一个任务实例</td>
+<td>标题、责任人、状态、证据位置、关键与否</td>
+<td>截止时间、所属位置</td>
+</tr>
+<tr>
+<td>决定</td>
+<td>一个决定实例</td>
+<td>决定内容、决策人、影响范围、证据位置</td>
+<td>生效时间</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>一条有向边</td>
+<td>起点、终点、依赖类型、证据位置</td>
+<td>强度</td>
+</tr>
+<tr>
+<td>位置</td>
+<td>一个职责集合</td>
+<td>名称、职责范围、占据者、证据</td>
+<td>备份状态</td>
+</tr>
+</tbody></table>
+<p>“可接受替代”指语义等价但字面不同的答案，例如“张至顺”与“张老师”在同一组织内指同一人。该口径必须事先列出，不能在评测后追加。</p>
+<h3>3.2 标注流程</h3>
+<p>标注流程分为抽样、独立标注、一致性检查、分歧裁决、锁定金标准五步。流程见图 1。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 1：标注与评测流程</text><rect x="22" y="62" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="101" y="87" font-size="12.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">分层抽样</text><text x="101" y="107" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">按类型与长度</text><line x1="182" y1="93" x2="191" y2="93" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="194" y="62" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="273" y="87" font-size="12.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">冻结清单</text><text x="273" y="107" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">标注期不换样本</text><line x1="354" y1="93" x2="363" y2="93" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="366" y="62" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="445" y="87" font-size="12.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">双人独立标注</text><text x="445" y="107" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">同一版规范</text><line x1="526" y1="93" x2="535" y2="93" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="538" y="62" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#d9822b" stroke-width="1.4" /><text x="617" y="87" font-size="12.5" fill="#d9822b" text-anchor="middle" font-weight="bold">一致性检查</text><text x="617" y="107" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">字段级计算</text><rect x="22" y="182" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#d9822b" stroke-width="1.4" /><text x="101" y="207" font-size="12.5" fill="#d9822b" text-anchor="middle" font-weight="bold">分歧裁决</text><text x="101" y="227" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">理由必填</text><line x1="182" y1="213" x2="191" y2="213" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="194" y="182" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#4a8f5b" stroke-width="1.4" /><text x="273" y="207" font-size="12.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">锁定金标准</text><text x="273" y="227" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">只追加版本</text><line x1="354" y1="213" x2="363" y2="213" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="366" y="182" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#4a8f5b" stroke-width="1.4" /><text x="445" y="207" font-size="12.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">划分开发与测试</text><text x="445" y="227" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">按记录划分</text><line x1="526" y1="213" x2="535" y2="213" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><rect x="538" y="182" width="158" height="62" rx="6" fill="#f7f9fb" stroke="#4a8f5b" stroke-width="1.4" /><text x="617" y="207" font-size="12.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">评测与报告</text><text x="617" y="227" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">区间与样本量</text><path d="M617,126 L617,154 L101,154 L101,178" fill="none" stroke="#7a7a7a" stroke-width="1.6" marker-end="url(#arrow)"/><text x="22" y="258" font-size="11" fill="#444" text-anchor="start" font-weight="normal">要求：标注者先独立完成，裁决前不查看对方结果；测试集在阶段性评测前保持锁定。</text><text x="736" y="288" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 1：标注与评测流程。两名标注者独立完成后才可查看对方结果；裁决后的标签锁定为金标准，后续模型评测不得修改。</p>
+<p>流程要求如下。第一，抽样完成后冻结记录清单，标注期间不替换样本。第二，两名标注者使用同一版规范，规范版本号写入标注文件。第三，一致性与分歧在裁决前统计，避免裁决结果反向影响独立性。第四，每条裁决必须写明理由，理由字段为必填。第五，金标准锁定后只允许追加版本，不允许原地修改。</p>
+<h3>3.3 一致性检验与分歧裁决</h3>
+<p>一致性使用标注一致性系数计算，公式见附录 A.2。该系数扣除随机一致的部分，适合两个标注者、多个类别的场景。字段门槛建议如下。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>一致性门槛</th>
+<th>未达标时的处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>任务是否成立</td>
+<td>0.60</td>
+<td>补充正反例，明确最小任务的定义</td>
+</tr>
+<tr>
+<td>任务归属位置</td>
+<td>0.60</td>
+<td>补充位置清单与归并规则</td>
+</tr>
+<tr>
+<td>责任人</td>
+<td>0.60</td>
+<td>明确“可接受替代”清单</td>
+</tr>
+<tr>
+<td>依赖方向</td>
+<td>0.50</td>
+<td>补充方向判定例句</td>
+</tr>
+<tr>
+<td>证据偏移</td>
+<td>0.50</td>
+<td>明确证据窗口的起止规则</td>
+</tr>
+<tr>
+<td>决定是否成立</td>
+<td>0.60</td>
+<td>明确“决定”与“讨论”的边界</td>
+</tr>
+</tbody></table>
+<p>裁决规则：两人一致时直接采纳；一人标注、一人缺失时由裁决者补标并说明；两人不一致时并排查看原文，选择其一或改写，并记录理由。裁决者不参与模型评测的参数选择，避免同一人同时决定答案与标准。</p>
+<h3>3.4 抽样与数据划分</h3>
+<p>抽样采用分层方式：先按记录类型分层，再按长度分为短、中、长三层，每层按比例抽取。记录类型至少覆盖会议记录、群聊记录、任务描述三类。任务单给出的三十条记录是下限，若某层不足五条，应在报告中说明该层结论不稳定。</p>
+<p>数据划分以记录为单位，建议七成开发、三成测试。划分后生成固定的划分文件，记录编号写入其中。测试集在阶段性评测前保持锁定，界面上不显示其指标；只有完成一轮协议修订后才打开一次，打开次数记入报告。</p>
+<h3>3.5 指标定义</h3>
+<p>任务与决定检测使用精确率、召回率与 F1。精确率回答“抽出的实例中有多少是真的”，召回率回答“真实实例中有多少被抽出”，F1 是两者的调和平均。公式见附录 A.2。</p>
+<p>责任人使用双口径：完全一致要求字符串归一化后完全相等；可接受替代允许同义指代，但必须命中事先列出的清单。依赖边只有起点、终点、类型三者都正确才计为正确，方向错误单独计入错误类型。</p>
+<p>证据偏移指抽取结果所引用的原文位置与金标准位置的偏差。建议以句为窗口：引用句与金标准句相同或相邻计为命中；跨段引用计为偏移。下游指标稳定性使用 Top-5 风险集合的重合度衡量，重合度采用 Jaccard 相似度<sup>[13]</sup>，即两个集合的交集大小除以并集大小。</p>
+<p>模拟示例如图 2。图中数值为模拟示例（S），仅用于说明字段间差异如何呈现，不代表真实模型表现。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 2：字段级指标（模拟示例）</text><line x1="78" y1="288" x2="730" y2="288" stroke="#d9dee4" stroke-width="1" /><text x="68" y="292" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.00</text><line x1="78" y1="241.4" x2="730" y2="241.4" stroke="#d9dee4" stroke-width="1" /><text x="68" y="245.4" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.20</text><line x1="78" y1="194.8" x2="730" y2="194.8" stroke="#d9dee4" stroke-width="1" /><text x="68" y="198.8" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.40</text><line x1="78" y1="148.2" x2="730" y2="148.2" stroke="#d9dee4" stroke-width="1" /><text x="68" y="152.2" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.60</text><line x1="78" y1="101.6" x2="730" y2="101.6" stroke="#d9dee4" stroke-width="1" /><text x="68" y="105.6" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.80</text><line x1="78" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="68" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">1.00</text><line x1="78" y1="55" x2="78" y2="288" stroke="#22303c" stroke-width="1.2" /><line x1="78" y1="288" x2="730" y2="288" stroke="#22303c" stroke-width="1.2" /><text x="20" y="171.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 171.5)">指标值</text><text x="143.2" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">任务检测</text><rect x="90.69999999999999" y="87.62" width="30" height="200.38" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="105.69999999999999" y="82.62" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.86</text><rect x="125.69999999999999" y="99.26999999999998" width="30" height="188.73000000000002" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="140.7" y="94.26999999999998" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.81</text><rect x="160.7" y="94.61000000000001" width="30" height="193.39" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="175.7" y="89.61000000000001" font-size="9.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">0.83</text><text x="273.6" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">决定检测</text><rect x="221.10000000000002" y="106.25999999999999" width="30" height="181.74" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="236.10000000000002" y="101.25999999999999" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.78</text><rect x="256.1" y="120.24000000000001" width="30" height="167.76" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="271.1" y="115.24000000000001" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.72</text><rect x="291.1" y="113.25" width="30" height="174.75" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="306.1" y="108.25" font-size="9.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">0.75</text><text x="404" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">责任人（完全）</text><rect x="351.5" y="115.58000000000001" width="30" height="172.42" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="366.5" y="110.58000000000001" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.74</text><rect x="386.5" y="124.9" width="30" height="163.1" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="401.5" y="119.9" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.70</text><rect x="421.5" y="120.24000000000001" width="30" height="167.76" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="436.5" y="115.24000000000001" font-size="9.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">0.72</text><text x="534.4000000000001" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">依赖边</text><rect x="481.9000000000001" y="134.22" width="30" height="153.78" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="496.9000000000001" y="129.22" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.66</text><rect x="516.9000000000001" y="145.87" width="30" height="142.13" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="531.9000000000001" y="140.87" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.61</text><rect x="551.9000000000001" y="141.21" width="30" height="146.79" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="566.9000000000001" y="136.21" font-size="9.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">0.63</text><text x="664.8000000000001" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">证据偏移</text><rect x="612.3000000000001" y="99.26999999999998" width="30" height="188.73000000000002" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="627.3000000000001" y="94.26999999999998" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.81</text><rect x="647.3000000000001" y="108.59" width="30" height="179.41" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="662.3000000000001" y="103.59" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.77</text><rect x="682.3000000000001" y="103.92999999999998" width="30" height="184.07000000000002" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="697.3000000000001" y="98.92999999999998" font-size="9.5" fill="#4a8f5b" text-anchor="middle" font-weight="bold">0.79</text><rect x="88" y="336" width="14" height="14" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="108" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">精确率</text><rect x="233" y="336" width="14" height="14" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="253" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">召回率</text><rect x="378" y="336" width="14" height="14" rx="2" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="398" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">F1 / 命中率</text><text x="730" y="368" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 2：字段级精确率、召回率与 F1（模拟示例 S）。任务检测最高，依赖边最低；字段间差异说明评测必须分字段报告。</p>
+<h3>3.6 不确定性与稳定性</h3>
+<p>点估计不能反映小样本波动。协议要求对记录进行有放回重采样，重复不少于一千次，取百分之二点五与百分之九十七点五分位作为区间。区间宽度过大时，应增加样本而不是宣称模型稳定。</p>
+<p>同一模型至少独立运行两次，比较两次的下游 Top-5 风险集合。Jaccard 低于 0.6 时，该次评测不得用于上线判断。模型温度、提示词版本、解析规则均需固定并写入报告。</p>
+<p>模拟区间如图 3。图中区间为模拟示例（S），仅用于说明区间如何与点估计一同呈现。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 3：字段级指标的区间估计（模拟示例）</text><line x1="150" y1="55" x2="150" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="150" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.0</text><line x1="264" y1="55" x2="264" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="264" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.2</text><line x1="378" y1="55" x2="378" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="378" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.4</text><line x1="492" y1="55" x2="492" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="492" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.6</text><line x1="606" y1="55" x2="606" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="606" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.8</text><line x1="720" y1="55" x2="720" y2="280" stroke="#d9dee4" stroke-width="1" /><text x="720" y="298" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">1.0</text><line x1="150" y1="55" x2="150" y2="280" stroke="#22303c" stroke-width="1.2" /><line x1="150" y1="280" x2="720" y2="280" stroke="#22303c" stroke-width="1.2" /><text x="20" y="167.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 167.5)">指标值</text><text x="138" y="81.5" font-size="11" fill="#333" text-anchor="end" font-weight="normal">任务检测 F1</text><line x1="600.3" y1="77.5" x2="645.9" y2="77.5" stroke="#2f6fb0" stroke-width="3" /><line x1="600.3" y1="71.5" x2="600.3" y2="83.5" stroke="#2f6fb0" stroke-width="1.6" /><line x1="645.9" y1="71.5" x2="645.9" y2="83.5" stroke="#2f6fb0" stroke-width="1.6" /><circle cx="623.0999999999999" cy="77.5" r="5" fill="#d9822b" stroke="#d9822b" stroke-width="1.5" /><text x="623.0999999999999" y="67.5" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.83</text><text x="138" y="126.5" font-size="11" fill="#333" text-anchor="end" font-weight="normal">决定检测 F1</text><line x1="543.3" y1="122.5" x2="611.7" y2="122.5" stroke="#2f6fb0" stroke-width="3" /><line x1="543.3" y1="116.5" x2="543.3" y2="128.5" stroke="#2f6fb0" stroke-width="1.6" /><line x1="611.7" y1="116.5" x2="611.7" y2="128.5" stroke="#2f6fb0" stroke-width="1.6" /><circle cx="577.5" cy="122.5" r="5" fill="#d9822b" stroke="#d9822b" stroke-width="1.5" /><text x="577.5" y="112.5" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.75</text><text x="138" y="171.5" font-size="11" fill="#333" text-anchor="end" font-weight="normal">责任人 F1</text><line x1="531.9000000000001" y1="167.5" x2="588.9000000000001" y2="167.5" stroke="#2f6fb0" stroke-width="3" /><line x1="531.9000000000001" y1="161.5" x2="531.9000000000001" y2="173.5" stroke="#2f6fb0" stroke-width="1.6" /><line x1="588.9000000000001" y1="161.5" x2="588.9000000000001" y2="173.5" stroke="#2f6fb0" stroke-width="1.6" /><circle cx="560.4" cy="167.5" r="5" fill="#d9822b" stroke="#d9822b" stroke-width="1.5" /><text x="560.4" y="157.5" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.72</text><text x="138" y="216.5" font-size="11" fill="#333" text-anchor="end" font-weight="normal">依赖边 F1</text><line x1="463.5" y1="212.5" x2="554.7" y2="212.5" stroke="#2f6fb0" stroke-width="3" /><line x1="463.5" y1="206.5" x2="463.5" y2="218.5" stroke="#2f6fb0" stroke-width="1.6" /><line x1="554.7" y1="206.5" x2="554.7" y2="218.5" stroke="#2f6fb0" stroke-width="1.6" /><circle cx="509.1" cy="212.5" r="5" fill="#d9822b" stroke="#d9822b" stroke-width="1.5" /><text x="509.1" y="202.5" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.63</text><text x="138" y="261.5" font-size="11" fill="#333" text-anchor="end" font-weight="normal">证据偏移命中率</text><line x1="577.5" y1="257.5" x2="623.0999999999999" y2="257.5" stroke="#2f6fb0" stroke-width="3" /><line x1="577.5" y1="251.5" x2="577.5" y2="263.5" stroke="#2f6fb0" stroke-width="1.6" /><line x1="623.0999999999999" y1="251.5" x2="623.0999999999999" y2="263.5" stroke="#2f6fb0" stroke-width="1.6" /><circle cx="600.3" cy="257.5" r="5" fill="#d9822b" stroke="#d9822b" stroke-width="1.5" /><text x="600.3" y="247.5" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.79</text><text x="150" y="320" font-size="10.5" fill="#444" text-anchor="start" font-weight="normal">横线为百分之九十五区间；区间重叠的字段不能判定为存在差异。</text><text x="736" y="328" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 3：字段级指标的区间估计（模拟示例 S）。区间重叠的字段不能判定为存在差异；区间宽度反映样本量是否充分。</p>
+<h3>3.7 错误分类</h3>
+<p>错误分类的作用是指导下一步动作。固定六类：漏抽、错归属、错依赖方向、证据偏移、过度合并、该合未合。每类对应不同的修改方向。</p>
+<table>
+<thead>
+<tr>
+<th>错误类型</th>
+<th>定义</th>
+<th>典型修改方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>漏抽</td>
+<td>真实任务或决定未被抽出</td>
+<td>补充提示词中的触发表达，检查记录解析</td>
+</tr>
+<tr>
+<td>错归属</td>
+<td>实例存在但责任人、位置或决策人错误</td>
+<td>补充归属规则与指代消解<sup>[14]</sup></td>
+</tr>
+<tr>
+<td>错依赖方向</td>
+<td>依赖关系存在但起点与终点颠倒</td>
+<td>增加方向判定例句，区分“先做”与“属于”</td>
+</tr>
+<tr>
+<td>证据偏移</td>
+<td>引用位置与原文不符</td>
+<td>要求引用原句，限制改写</td>
+</tr>
+<tr>
+<td>过度合并</td>
+<td>不同任务被合并为一条</td>
+<td>收紧合并阈值，增加反例</td>
+</tr>
+<tr>
+<td>该合未合</td>
+<td>同一任务多次出现但未合并</td>
+<td>放宽阈值，补充同义表达</td>
+</tr>
+</tbody></table>
+<p>模拟错误分布如图 4。图中数量为模拟示例（S），仅用于说明错误分析如何呈现。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 4：五十个错误的类型分布（模拟示例）</text><line x1="70" y1="250" x2="730" y2="250" stroke="#d9dee4" stroke-width="1" /><text x="60" y="254" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0</text><line x1="70" y1="201.25" x2="730" y2="201.25" stroke="#d9dee4" stroke-width="1" /><text x="60" y="205.25" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">6</text><line x1="70" y1="152.5" x2="730" y2="152.5" stroke="#d9dee4" stroke-width="1" /><text x="60" y="156.5" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">13</text><line x1="70" y1="103.75" x2="730" y2="103.75" stroke="#d9dee4" stroke-width="1" /><text x="60" y="107.75" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">19</text><line x1="70" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="60" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">25</text><line x1="70" y1="55" x2="70" y2="250" stroke="#22303c" stroke-width="1.2" /><line x1="70" y1="250" x2="730" y2="250" stroke="#22303c" stroke-width="1.2" /><text x="20" y="152.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 152.5)">错误数</text><rect x="102" y="86.19999999999999" width="46" height="163.8" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="125" y="80.19999999999999" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">21</text><text x="125" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">漏抽</text><rect x="212" y="156.4" width="46" height="93.6" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="235" y="150.4" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">12</text><text x="235" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">错归属</text><rect x="322" y="203.2" width="46" height="46.8" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="345" y="197.2" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">6</text><text x="345" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">错依赖方向</text><rect x="432" y="211" width="46" height="39" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="455" y="205" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">5</text><text x="455" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">证据偏移</text><rect x="542" y="226.6" width="46" height="23.4" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="565" y="220.6" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">3</text><text x="565" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">过度合并</text><rect x="652" y="226.6" width="46" height="23.4" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="675" y="220.6" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">3</text><text x="675" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">该合未合</text><text x="730" y="328" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 4：五十个错误的类型分布（模拟示例 S）。漏抽与错归属占比最高，应优先修改提示词与归属规则。</p>
+<p>错误分析要求至少检查五十个错误，逐条给出类型、原文、模型输出与金标准。六类覆盖不足九成时，剩余错误归入“未解释”，并说明可能的成因。</p>
+<h3>3.8 换模型对照实验</h3>
+<p>对照实验使用同一数据版本、同一划分、同一评测脚本，只更换模型或提示词版本。比较时按字段查看差值与区间，不以总分排序。判断规则：区间不重叠且差值方向一致，才可表述为“该字段有改善”；区间重叠时表述为“未观察到显著差异”。</p>
+<p>对照实验至少包含一次“同模型重复运行”，用于估计评测本身的波动下限。若两次重复运行的差异大于模型更换带来的差异，则说明评测精度不足，应先扩大样本。</p>
+<h2>4. 对设计的影响</h2>
+<h3>4.1 标注界面</h3>
+<p>界面需要支持领取任务、逐字段标注、引用原文、提交与查看自己的分歧。引用原文应采用句级选择，而不是自由复制，以保证证据偏移可计算。标注界面必须显示 schema 版本与规范版本，版本不一致时禁止提交。</p>
+<h3>4.2 裁决界面</h3>
+<p>裁决界面并排显示两人结果，按一致、不一致、一方缺失三种状态着色。裁决结果与理由均为必填；理由字段建议提供常用理由选项，同时允许自由填写。裁决记录只追加，不覆盖。</p>
+<h3>4.3 报告页</h3>
+<p>报告页按三层组织：顶部为样本构成与覆盖率，中部为实例层与字段层指标及区间，底部为错误分布与错误样例入口。每个指标必须附样本量；样本量不足时置灰并说明原因，不显示为绿色。</p>
+<h3>4.4 版本锁定与测试集保护</h3>
+<p>每次评测生成一份版本记录，包含数据版本、schema 版本、提示词版本、模型名称、参数与脚本命令。缺少任一项的记录不得进入对比页。测试集指标默认隐藏，只有标记为“阶段性评测”的运行才展示，并记录打开时间与操作人。</p>
+<h2>5. 未决问题</h2>
+<table>
+<thead>
+<tr>
+<th>未决项</th>
+<th>状态</th>
+<th>原因</th>
+<th>下一步</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>双人标注是否可行</td>
+<td>未做</td>
+<td>需要两名了解业务的成员与时间</td>
+<td>先在一个团队试点三十条记录</td>
+</tr>
+<tr>
+<td>三十条记录的字段样本量</td>
+<td>未定</td>
+<td>任务与决定的密度未知</td>
+<td>预标注十条，估算每条的实例数</td>
+</tr>
+<tr>
+<td>可接受替代清单</td>
+<td>未定</td>
+<td>需要真实姓名与称谓样本</td>
+<td>从脱敏记录中整理候选清单</td>
+</tr>
+<tr>
+<td>证据窗口粒度</td>
+<td>未定</td>
+<td>句级与段级各有取舍</td>
+<td>用十条记录做双口径对比</td>
+</tr>
+<tr>
+<td>依赖方向一致性</td>
+<td>未验证</td>
+<td>依赖实例少，可能不足统计</td>
+<td>扩大决定类记录比例</td>
+</tr>
+<tr>
+<td>测试集泄漏风险</td>
+<td>未评估</td>
+<td>记录可能被重复引用</td>
+<td>按来源文档聚簇划分</td>
+</tr>
+<tr>
+<td>错误分类的稳定性</td>
+<td>未验证</td>
+<td>需要至少五十个真实错误</td>
+<td>首轮评测后复核分类</td>
+</tr>
+<tr>
+<td>报告模板的可用性</td>
+<td>未验证</td>
+<td>尚未给第三人试用</td>
+<td>由第三人按模板复现一次</td>
+</tr>
+</tbody></table>
+<h2>6. 下一步</h2>
+<ol>
+<li>完成十条记录的预标注，估算任务与决定的实例密度，据此确定三十条记录是否足够。</li>
+<li>编写标注规范 v1，包含字段定义、正反例、可接受替代清单与证据窗口规则。</li>
+<li>组织两名标注者独立标注，计算字段级一致性，逐条裁决并记录理由。</li>
+<li>实现指标脚本与重采样区间，固定数据划分并锁定测试集。</li>
+<li>完成首轮评测，检查至少五十个错误并按六类归档。</li>
+<li>做一次同模型重复运行与一次换提示词对照，验证指标能否区分差异。</li>
+</ol>
+<h2>7. 验收对照</h2>
+<table>
+<thead>
+<tr>
+<th>验收标准</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>双人一致性不低于 0.6，争议字段有裁决规则</td>
+<td>未完成</td>
+<td>规则已定义，尚未实测</td>
+</tr>
+<tr>
+<td>同一模型两次运行，Top-5 风险集合重合度不低于 0.6</td>
+<td>未完成</td>
+<td>需真实记录与两次运行</td>
+</tr>
+<tr>
+<td>错误分类覆盖不少于九成，其余归入未解释</td>
+<td>未完成</td>
+<td>需至少五十个真实错误</td>
+</tr>
+<tr>
+<td>第三人可按报告复现评测</td>
+<td>方法通过，未实测</td>
+<td>版本字段与命令模板已定义</td>
+</tr>
+<tr>
+<td>不以文本相似度指标代替结构化指标</td>
+<td>通过</td>
+<td>主表只含结构化指标</td>
+</tr>
+<tr>
+<td>合成数据与真实数据分表报告</td>
+<td>通过</td>
+<td>已设三级真值表与标注要求</td>
+</tr>
+</tbody></table>
+<div class="page-break"></div><h2>附录 A 公式、规范与模板</h2>
+<h3>A.1 术语与符号</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>真值</td>
+<td>用于比较的标准答案，本报告分为三级</td>
+</tr>
+<tr>
+<td>实例</td>
+<td>一个任务、一个决定或一条依赖边</td>
+</tr>
+<tr>
+<td>字段</td>
+<td>实例的一个属性，如责任人、截止时间</td>
+</tr>
+<tr>
+<td>金标准</td>
+<td>经双人标注与裁决后锁定的真值集合</td>
+</tr>
+<tr>
+<td>开发集</td>
+<td>允许用于调参与查看指标的数据划分</td>
+</tr>
+<tr>
+<td>测试集</td>
+<td>仅在阶段性评测时打开的数据划分</td>
+</tr>
+<tr>
+<td>证据偏移</td>
+<td>抽取结果引用位置与标准位置之间的偏差</td>
+</tr>
+</tbody></table>
+<h3>A.2 公式与算例</h3>
+<p>精确率、召回率与 F1：</p>
+<div class="formula">P = TP ÷ (TP + FP)</div><div class="formula">R = TP ÷ (TP + FN)</div><div class="formula">F1 = 2 × P × R ÷ (P + R)</div><p>其中 TP 为正确抽出的实例数，FP 为错误抽出的实例数，FN 为漏抽的实例数。算例：TP 为 40，FP 为 10，FN 为 12，则 P 为 0.80，R 为 0.77，F1 为 0.78。</p>
+<p>标注一致性系数：</p>
+<div class="formula">κ = (P<sub>o</sub> − P<sub>e</sub>) ÷ (1 − P<sub>e</sub>)</div><p>其中 P<sub>o</sub> 为两人实际一致比例，P<sub>e</sub> 为按各类别边际分布计算的随机一致比例。算例：两人在 100 个实例上一致 80 个，随机一致比例为 0.5，则 κ 为 0.60。</p>
+<p>Jaccard 相似度：</p>
+<div class="formula">J(A, B) = |A ∩ B| ÷ |A ∪ B|</div><p>算例：两次运行的 Top-5 风险集合交集为 4，并集为 6，则 J 为 0.67，达到展示门槛。</p>
+<h3>A.3 标注规范 v1 目录</h3>
+<ol>
+<li>适用范围与版本规则。</li>
+<li>任务的定义、最小粒度与正反例。</li>
+<li>决定的定义，与讨论、建议的区分。</li>
+<li>责任人规则与可接受替代清单。</li>
+<li>依赖方向规则与典型例句。</li>
+<li>证据引用的句级规则与偏移判定。</li>
+<li>不确定情况的标注方式。</li>
+<li>分歧裁决流程与理由写法。</li>
+</ol>
+<h3>A.4 错误分类表</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>类型</th>
+<th>判定要点</th>
+<th>修改方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E1</td>
+<td>漏抽</td>
+<td>金标准有、模型无</td>
+<td>触发表达、解析完整性</td>
+</tr>
+<tr>
+<td>E2</td>
+<td>错归属</td>
+<td>实例对、责任人错</td>
+<td>指代消解、归属规则</td>
+</tr>
+<tr>
+<td>E3</td>
+<td>错依赖方向</td>
+<td>边对、方向反</td>
+<td>方向例句、句法线索</td>
+</tr>
+<tr>
+<td>E4</td>
+<td>证据偏移</td>
+<td>引用位置不符</td>
+<td>限定引用原句</td>
+</tr>
+<tr>
+<td>E5</td>
+<td>过度合并</td>
+<td>多任务合成一条</td>
+<td>收紧阈值、反例</td>
+</tr>
+<tr>
+<td>E6</td>
+<td>该合未合</td>
+<td>同一任务多条</td>
+<td>放宽阈值、同义表达</td>
+</tr>
+</tbody></table>
+<h3>A.5 评测报告模板</h3>
+<table>
+<thead>
+<tr>
+<th>区块</th>
+<th>必填内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基本信息</td>
+<td>数据版本、schema 版本、提示词版本、模型、参数、脚本命令</td>
+</tr>
+<tr>
+<td>样本</td>
+<td>记录数、实例数、字段数、划分比例</td>
+</tr>
+<tr>
+<td>主指标</td>
+<td>字段级 P、R、F1 与区间</td>
+</tr>
+<tr>
+<td>稳定性</td>
+<td>重复运行的 Top-5 重合度</td>
+</tr>
+<tr>
+<td>错误</td>
+<td>六类分布、典型样例编号</td>
+</tr>
+<tr>
+<td>结论</td>
+<td>可用、不可用或需补样本，附依据</td>
+</tr>
+</tbody></table>
+<h3>A.6 抽样表模板</h3>
+<table>
+<thead>
+<tr>
+<th>记录编号</th>
+<th>类型</th>
+<th>长度档</th>
+<th>任务数</th>
+<th>决定数</th>
+<th>是否进入测试集</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R-001</td>
+<td>会议</td>
+<td>中</td>
+<td>4</td>
+<td>2</td>
+<td>否</td>
+</tr>
+<tr>
+<td>R-002</td>
+<td>群聊</td>
+<td>短</td>
+<td>2</td>
+<td>0</td>
+<td>是</td>
+</tr>
+<tr>
+<td>R-003</td>
+<td>任务描述</td>
+<td>短</td>
+<td>1</td>
+<td>0</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<h2>注释</h2>
+<ol>
+<li><strong>金标准：</strong> 经两名标注者独立标注、逐条裁决后锁定的标准答案集合。金标准一旦锁定，只允许追加版本，不允许原地修改。</li>
+<li><strong>分层抽样：</strong> 先按记录类型与长度分组，再在各组内按比例抽取样本的方法。其作用是避免某类记录在评测中缺失或被过度代表。</li>
+<li><strong>标注一致性系数：</strong> 扣除随机一致部分后衡量两名标注者一致程度的统计量，常用符号为 κ。取值越低，说明标注口径越不稳定。</li>
+<li><strong>精确率：</strong> 抽出的实例中真正正确的比例，回答“抽出来的有多少是对的”。</li>
+<li><strong>召回率：</strong> 真实实例中被抽出的比例，回答“该抽的抽到了多少”。</li>
+<li><strong>F1：</strong> 精确率与召回率的调和平均，用于在两者之间取平衡。调和平均对较低的一项更敏感。</li>
+<li><strong>可接受替代：</strong> 语义等价但字面不同的答案，例如同一人的姓名与常用称谓。清单必须事先确定。</li>
+<li><strong>证据偏移：</strong> 抽取结果引用的原文位置与标准位置之间的偏差。本报告以句为窗口判定是否命中。</li>
+<li><strong>重采样：</strong> 从现有样本中有放回地反复抽取子样本，用以估计统计量波动的方法，常用 bootstrap 指代。</li>
+<li><strong>置信区间：</strong> 在一定置信水平下包含真实值的区间。本报告使用百分之九十五置信水平。</li>
+<li><strong>开发集与测试集：</strong> 开发集允许查看指标并用于调参；测试集在调参阶段锁定，只用于阶段性评测，以防止过拟合。</li>
+<li><strong>脱敏：</strong> 移除或替换可识别个人身份的信息，保留结构与统计特征。</li>
+<li><strong>Jaccard 相似度：</strong> 两个集合的交集大小除以并集大小，取值在零到一之间，用于衡量集合重合程度。</li>
+<li><strong>指代消解：</strong> 判断代词或称谓指向哪个人或哪个实体的处理过程，例如判断“他”指谁。</li>
+</ol>
+<h2>AI 使用说明</h2>
+<ul>
+<li>是否使用：是</li>
+<li>使用工具：Qoder</li>
+<li>参与环节：资料整理、结构与初稿撰写、图表生成与排版</li>
+<li>人工核验方式：待调研人 Dtao 核对来源、数据与结论</li>
+<li>本人确认：待调研人签署确认</li>
+</ul>
+
+</body>
+</html>

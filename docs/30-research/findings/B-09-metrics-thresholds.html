@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>B-09 指标与阈值</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "SimSun", sans-serif;
+  font-size: 10pt; line-height: 1.65; color: #1f2933;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1 { font-size: 19pt; text-align: center; margin: 4mm 0 5mm; line-height: 1.35; }
+h2 { font-size: 14pt; margin: 7mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.4pt solid #2f6fb0; page-break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 5mm 0 2mm; page-break-after: avoid; }
+p { margin: 2mm 0; text-align: justify; }
+ul, ol { margin: 2mm 0 2mm 7mm; padding-left: 0; }
+li { margin: 1mm 0; }
+table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 8.8pt; page-break-inside: auto; }
+th, td { border: 0.6pt solid #9aa5b1; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+th { background: #eef3f8; font-weight: 600; }
+tr { page-break-inside: avoid; }
+mark { background: #fff1a8; padding: 0 0.5mm; }
+sup { font-size: 7pt; color: #2f6fb0; }
+.formula { margin: 2.5mm 0; padding: 2mm 3mm; background: #f7f9fb; border-left: 2.5pt solid #2f6fb0; font-family: "Consolas", "Microsoft YaHei", monospace; font-size: 10pt; }
+.figure-svg { margin: 3mm 0 1mm; page-break-inside: avoid; }
+.figure-svg svg { width: 100%; height: auto; display: block; }
+img { max-width: 100%; page-break-inside: avoid; }
+.page-break { page-break-before: always; height: 0; margin: 0; }
+code { font-family: "Consolas", monospace; background: #f1f3f5; padding: 0 1mm; border-radius: 1mm; }
+blockquote { margin: 3mm 0; padding: 2mm 3mm; border-left: 2.5pt solid #9aa5b1; color: #444; }
+.toc { margin: 2mm 0; line-height: 1.75; }
+.toc-two { columns: 2; column-gap: 12mm; line-height: 1.7; }
+</style>
+</head>
+<body>
+<h1>B-09 单点承担、依赖集中与角色重叠应如何度量</h1>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>调研人</td>
+<td>Dtao</td>
+</tr>
+<tr>
+<td>完成日期</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>对应单子</td>
+<td>资料库「调研任务单」之 B-09-metrics-thresholds</td>
+</tr>
+<tr>
+<td>报告版本</td>
+<td>v1.0</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>部分完成：指标定义、投影选择与阈值规则已定义；真实图计算、bootstrap 实测、盲评与误读测试尚未完成</td>
+</tr>
+</tbody></table>
+<p><strong>数据标识说明：</strong> 本报告中的指标数值、稳定性系数、盲评一致率与误读比例均为<strong>模拟示例（S）</strong>，统一标记为“模拟示例（S）”。S 数据仅用于说明指标如何呈现与比较，不代表任何真实团队，也不作为效度证据。真实计算取得后，应以相同口径重算并替换。任务单转引的文献（Freeman、Brandes、Tarjan、Lengauer 与 Tarjan、Burt、Dunn 等）标注为<strong>待核实</strong>，本报告未逐篇核验原文。</p>
+<p><strong>阅读说明：</strong> 第 1 节给出结论；第 2 节说明小样本对指标的影响与三种投影；第 3 节给出指标定义、阈值分档与稳定性规则；第 4 节说明对风险面板的影响；第 5 至 7 节列出未决问题、下一步与验收对照；附录提供公式、完整指标表与测试提纲。</p>
+<h2>摘要</h2>
+<p>本报告回答三个问题：十人左右的团队应当使用哪些结构指标、阈值如何确定、哪些指标不应展示。结论是：共同参与图在十人团队中接近完全图，割点<sup>[1]</sup>常为空，主投影应改为“关键任务图”，辅助使用“人—任务二部图”；指标按位置层、结构层、团队层三层组织，每个指标必须写明适用规模、失效条件与解释话术。</p>
+<p>阈值采用双轨：绝对阈值只用于展示，判定使用分位数与零模型对比。同一指标在五人、十人、十五人三档分别给出参照，不能只给一个数。稳定性使用重采样评估，Top-5 风险集合的重合度低于 0.6 时，不允许展示精确排名，只展示集合与区间。</p>
+<p>指标需要去冗余：HHI 与 Gini 高度相关，保留其一；介数与割点部分重叠，分层展示。面板最多六个指标，分三组：单点风险、集中风险、重叠风险。每个指标配“这说明什么、不说明什么”，并明确指标用于发现位置，不用于评价个人。</p>
+<p>模拟示例表明，该方案能够给出非空单点集合、区分稳定性高低并暴露误读风险；但真实图计算、重采样实测、盲评与误读测试尚未执行，因此本报告的结论属于方法层结论。</p>
+<h2>目录</h2>
+<div class="toc toc-two">
+1. 结论<br>
+2. 术语与适用性<br>
+3. 指标与阈值建议<br>
+4. 对设计的影响<br>
+5. 未决问题<br>
+6. 下一步<br>
+7. 验收对照<br>
+附录 A 公式、指标表与测试提纲<br>
+注释
+</div><hr>
+<h2>1. 结论</h2>
+<ol>
+<li><strong>主投影改为关键任务图。</strong> 十人团队的共同参与图接近完全图，割点常为空；只保留关键任务形成的人与位置连接，才能得到非空的单点集合。</li>
+<li><strong>指标分三层。</strong> 位置层包括负载、备份覆盖与单点标记；结构层包括割点、支配点<sup>[2]</sup>、介数<sup>[3]</sup>与约束；团队层包括 HHI<sup>[4]</sup>、Gini<sup>[5]</sup>与 Top-5 集中度。三层分别回答“哪个位置危险”“结构哪里脆弱”“整体是否集中”。</li>
+<li><strong>每个指标必须写明适用规模与失效条件。</strong> 不满足条件的指标置灰并说明原因，不隐藏，也不显示为低风险。</li>
+<li><strong>阈值采用分位数与零模型双轨。</strong> 绝对阈值用于展示，判定使用同规模团队的分位数或与随机图对比的标准化分数<sup>[6]</sup>；五人、十人、十五人三档分别给出参照。</li>
+<li><strong>稳定性不足时不展示排名。</strong> 重采样后 Top-5 风险集合重合度低于 0.6 的指标，只展示集合、区间与“仅作参考”标记，不展示精确名次。</li>
+<li><strong>指标去冗余。</strong> HHI 与 Gini 保留其一；介数与割点分层展示；每个指标必须能回答一个具体问题，不为凑数增加指标。</li>
+<li><strong>面板最多六个指标。</strong> 分为单点风险、集中风险、重叠风险三组，每组两个；每个指标卡包含一句话解释、当前值、样本量、稳定性与“这说明、不说明”。</li>
+<li><strong>指标只描述结构状态。</strong> 不做个人排名，不预测离职或失败，不输出绩效结论；风险排序必须可下钻到位置、任务与证据。</li>
+</ol>
+<h2>2. 术语与适用性</h2>
+<h3>2.1 小样本对网络指标的影响</h3>
+<p>组织网络分析<sup>[7]</sup>的多数指标来自大样本网络研究。十人左右团队的节点少、密度高，指标会呈现两种偏差：一是密度接近上限，区分度下降；二是少量边的变化即可显著改变指标，稳定性不足。</p>
+<p>任务单引用的研究指出，小网络的中心性与割点结果对规模与密度敏感。因此本报告不直接采用大网络的经验阈值，而是按规模分档，并用随机图作为参照。</p>
+<h3>2.2 三种投影</h3>
+<p>同一批记录可以构造不同的图。投影<sup>[8]</sup>选择决定了哪些指标有意义。</p>
+<table>
+<thead>
+<tr>
+<th>投影</th>
+<th>节点</th>
+<th>边</th>
+<th>能回答的问题</th>
+<th>主要局限</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>共同参与图</td>
+<td>人</td>
+<td>共同参与同一任务</td>
+<td>谁与谁经常协作</td>
+<td>十人团队接近完全图，割点常为空</td>
+</tr>
+<tr>
+<td>关键任务图</td>
+<td>人</td>
+<td>共同承担同一关键任务</td>
+<td>关键任务上谁不可替代</td>
+<td>关键任务少时边稀疏</td>
+</tr>
+<tr>
+<td>人—任务二部图</td>
+<td>人与任务</td>
+<td>人承担任务</td>
+<td>哪个任务只有一人承担</td>
+<td>需要任务归属准确</td>
+</tr>
+</tbody></table>
+<p>三种投影的关系如图 1。图中团队为模拟示例（S），仅用于说明结构差异。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 1：三种投影示意（模拟示例）</text><rect x="20" y="48" width="224" height="236" rx="8" fill="#fafbfc" stroke="#d9dee4" stroke-width="1" /><text x="132" y="72" font-size="13" fill="#22303c" text-anchor="middle" font-weight="bold">共同参与图</text><rect x="268" y="48" width="224" height="236" rx="8" fill="#fafbfc" stroke="#d9dee4" stroke-width="1" /><text x="380" y="72" font-size="13" fill="#22303c" text-anchor="middle" font-weight="bold">关键任务图</text><rect x="516" y="48" width="224" height="236" rx="8" fill="#fafbfc" stroke="#d9dee4" stroke-width="1" /><text x="628" y="72" font-size="13" fill="#22303c" text-anchor="middle" font-weight="bold">人—任务二部图</text><line x1="92" y1="130" x2="172" y2="130" stroke="#b9c6d4" stroke-width="1" /><line x1="92" y1="130" x2="132" y2="190" stroke="#b9c6d4" stroke-width="1" /><line x1="92" y1="130" x2="92" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="92" y1="130" x2="172" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="172" y1="130" x2="132" y2="190" stroke="#b9c6d4" stroke-width="1" /><line x1="172" y1="130" x2="92" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="172" y1="130" x2="172" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="132" y1="190" x2="92" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="132" y1="190" x2="172" y2="240" stroke="#b9c6d4" stroke-width="1" /><line x1="92" y1="240" x2="172" y2="240" stroke="#b9c6d4" stroke-width="1" /><circle cx="92" cy="130" r="11" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="172" cy="130" r="11" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="132" cy="190" r="11" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="92" cy="240" r="11" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="172" cy="240" r="11" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><line x1="300" y1="130" x2="350" y2="110" stroke="#b9c6d4" stroke-width="1.4" /><line x1="300" y1="130" x2="350" y2="160" stroke="#b9c6d4" stroke-width="1.4" /><line x1="350" y1="110" x2="350" y2="160" stroke="#b9c6d4" stroke-width="1.4" /><line x1="430" y1="130" x2="470" y2="110" stroke="#b9c6d4" stroke-width="1.4" /><line x1="430" y1="130" x2="470" y2="160" stroke="#b9c6d4" stroke-width="1.4" /><line x1="470" y1="110" x2="470" y2="160" stroke="#b9c6d4" stroke-width="1.4" /><line x1="350" y1="130" x2="390" y2="130" stroke="#c0504d" stroke-width="2" /><line x1="390" y1="130" x2="430" y2="130" stroke="#c0504d" stroke-width="2" /><circle cx="300" cy="130" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="350" cy="110" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="350" cy="160" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="390" cy="130" r="11" fill="#fff" stroke="#c0504d" stroke-width="2.4" /><circle cx="430" cy="130" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="470" cy="110" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><circle cx="470" cy="160" r="10" fill="#fff" stroke="#2f6fb0" stroke-width="1.5" /><line x1="555" y1="125" x2="540" y2="215" stroke="#b9c6d4" stroke-width="1.4" /><line x1="555" y1="125" x2="610" y2="215" stroke="#b9c6d4" stroke-width="1.4" /><line x1="620" y1="125" x2="610" y2="215" stroke="#b9c6d4" stroke-width="1.4" /><line x1="620" y1="125" x2="680" y2="215" stroke="#b9c6d4" stroke-width="1.4" /><line x1="685" y1="125" x2="680" y2="215" stroke="#c0504d" stroke-width="2" /><circle cx="555" cy="125" r="10" fill="#fff" stroke="#d9822b" stroke-width="1.5" /><circle cx="620" cy="125" r="10" fill="#fff" stroke="#d9822b" stroke-width="1.5" /><circle cx="685" cy="125" r="10" fill="#fff" stroke="#d9822b" stroke-width="1.5" /><rect x="522" y="203" width="36" height="24" rx="4" fill="#eef3f8" stroke="#2f6fb0" stroke-width="1.2" /><rect x="592" y="203" width="36" height="24" rx="4" fill="#eef3f8" stroke="#c0504d" stroke-width="2" /><rect x="662" y="203" width="36" height="24" rx="4" fill="#eef3f8" stroke="#2f6fb0" stroke-width="1.2" /><text x="112" y="274" font-size="9.5" fill="#666" text-anchor="middle" font-weight="normal">人员节点</text><text x="380" y="274" font-size="9.5" fill="#666" text-anchor="middle" font-weight="normal">红点为割点</text><text x="628" y="274" font-size="9.5" fill="#666" text-anchor="middle" font-weight="normal">上为人，下为任务</text><text x="20" y="318" font-size="10" fill="#444" text-anchor="start" font-weight="normal">注：共同参与图在十人团队中接近完全图，割点通常为空；关键任务图与二部图更容易暴露单点。</text>
+</svg>
+</div></p>
+<p>图 1：三种投影示意（模拟示例 S）。左图为共同参与图，接近完全图；中图为关键任务图，出现明显割点；右图为人—任务二部图，可直接定位单人承担的任务。</p>
+<p>模拟对比见图 2。图中数值为模拟示例（S），仅用于说明不同投影给出的单点集合规模。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="340" viewBox="0 0 760 340" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 2：三种投影识别出的单点数量（模拟示例）</text><line x1="70" y1="250" x2="730" y2="250" stroke="#d9dee4" stroke-width="1" /><text x="60" y="254" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0</text><line x1="70" y1="201.25" x2="730" y2="201.25" stroke="#d9dee4" stroke-width="1" /><text x="60" y="205.25" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">2</text><line x1="70" y1="152.5" x2="730" y2="152.5" stroke="#d9dee4" stroke-width="1" /><text x="60" y="156.5" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">3</text><line x1="70" y1="103.75" x2="730" y2="103.75" stroke="#d9dee4" stroke-width="1" /><text x="60" y="107.75" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">5</text><line x1="70" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="60" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">6</text><line x1="70" y1="55" x2="70" y2="250" stroke="#22303c" stroke-width="1.2" /><line x1="70" y1="250" x2="730" y2="250" stroke="#22303c" stroke-width="1.2" /><text x="20" y="152.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 152.5)">单点数量</text><rect x="157" y="250" width="46" height="0" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="180" y="244" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0</text><text x="180" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">共同参与图</text><rect x="377" y="120" width="46" height="130" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="400" y="114" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">4</text><text x="400" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">关键任务图</text><rect x="597" y="87.5" width="46" height="162.5" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="620" y="81.5" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">5</text><text x="620" y="274" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">人—任务二部图</text><text x="730" y="328" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 2：三种投影识别出的单点数量（模拟示例 S）。共同参与图为空，关键任务图与二部图给出非空集合。</p>
+<h3>2.3 指标分层</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>指标</th>
+<th>回答的问题</th>
+<th>展示位置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>位置层</td>
+<td>加权负载、备份覆盖、单点标记</td>
+<td>哪个位置风险最高</td>
+<td>风险清单首屏</td>
+</tr>
+<tr>
+<td>结构层</td>
+<td>割点、支配点、介数、约束</td>
+<td>结构在哪里脆弱</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>团队层</td>
+<td>HHI、Gini、Top-5 集中度</td>
+<td>整体是否过度集中</td>
+<td>概览卡片</td>
+</tr>
+</tbody></table>
+<p>三层不能混为一个总分。总分会掩盖“整体分散但单点致命”的情形。</p>
+<h3>2.4 适用条件与失效条件</h3>
+<p>适用条件：团队规模在五至十五人；任务归属有记录支撑；关键任务有明确标记；记录覆盖不少于一个完整工作周期。</p>
+<p>失效条件：团队处于频繁重组；任务归属大量缺失；关键任务标记由单人随意决定；指标被用于个人绩效；样本周期短于任务平均周期。出现任一条件时，指标只作参考，不进入风险排序。</p>
+<h2>3. 指标与阈值建议</h2>
+<h3>3.1 投影选择</h3>
+<p>主投影为关键任务图，辅助投影为人—任务二部图，共同参与图仅用于展示协作密度，不用于单点判定。理由有三：第一，关键任务图保留了真正影响交付的连接；第二，二部图可以直接回答“哪个任务只有一人承担”；第三，共同参与图在十人团队中区分度不足。</p>
+<p>投影选择必须在报告中写明，并与 B-02 位置模型的“位置”口径一致：节点是位置时，边表示同一关键任务或同一关键决定；节点是人时，边表示共同承担。</p>
+<h3>3.2 指标定义</h3>
+<p>每个指标需要回答一个具体问题。完整定义表见附录 A.3，核心字段如下。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>回答的问题</th>
+<th>适用规模</th>
+<th>失效条件</th>
+<th>展示级别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>加权负载</td>
+<td>哪个位置承担最多</td>
+<td>五至十五人</td>
+<td>任务权重未校准</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>备份覆盖</td>
+<td>关键任务是否有第二人</td>
+<td>五至十五人</td>
+<td>备份仅为名义指定</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>单点标记</td>
+<td>该位置是否只有一人</td>
+<td>五至十五人</td>
+<td>任务归属缺失</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>割点</td>
+<td>移除后网络是否断开</td>
+<td>十人以上</td>
+<td>图接近完全图</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>支配点</td>
+<td>有向依赖是否必经该点</td>
+<td>五至十五人</td>
+<td>依赖方向缺失</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>介数中心性</td>
+<td>是否位于多条最短路径上</td>
+<td>十人以上</td>
+<td>图过密</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>HHI</td>
+<td>负载是否集中于少数位置</td>
+<td>五至十五人</td>
+<td>任务数过少</td>
+<td>概览</td>
+</tr>
+<tr>
+<td>Gini</td>
+<td>负载分布是否不均</td>
+<td>五至十五人</td>
+<td>与 HHI 冗余</td>
+<td>仅参考</td>
+</tr>
+<tr>
+<td>角色重叠</td>
+<td>多少任务由多人共同承担</td>
+<td>五至十五人</td>
+<td>共管未记录</td>
+<td>概览</td>
+</tr>
+</tbody></table>
+<h3>3.3 阈值分档</h3>
+<p>阈值不能只给一个数。建议按规模给出三档参照，并使用分位数表达。图 3 为模拟示例（S）。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 3：不同规模下的阈值参照（模拟示例）</text><line x1="78" y1="288" x2="730" y2="288" stroke="#d9dee4" stroke-width="1" /><text x="68" y="292" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.00</text><line x1="78" y1="241.4" x2="730" y2="241.4" stroke="#d9dee4" stroke-width="1" /><text x="68" y="245.4" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.20</text><line x1="78" y1="194.8" x2="730" y2="194.8" stroke="#d9dee4" stroke-width="1" /><text x="68" y="198.8" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.40</text><line x1="78" y1="148.2" x2="730" y2="148.2" stroke="#d9dee4" stroke-width="1" /><text x="68" y="152.2" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.60</text><line x1="78" y1="101.6" x2="730" y2="101.6" stroke="#d9dee4" stroke-width="1" /><text x="68" y="105.6" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.80</text><line x1="78" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="68" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">1.00</text><line x1="78" y1="55" x2="78" y2="288" stroke="#22303c" stroke-width="1.2" /><line x1="78" y1="288" x2="730" y2="288" stroke="#22303c" stroke-width="1.2" /><text x="20" y="171.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 171.5)">阈值</text><text x="186.66666666666669" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">五人团队</text><rect x="151.66666666666669" y="206.45" width="30" height="81.55" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="166.66666666666669" y="201.45" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.35</text><rect x="186.66666666666669" y="148.20000000000002" width="30" height="139.79999999999998" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="201.66666666666669" y="143.20000000000002" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.60</text><text x="404.00000000000006" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">十人团队</text><rect x="369.00000000000006" y="218.10000000000002" width="30" height="69.89999999999999" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="384.00000000000006" y="213.10000000000002" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.30</text><rect x="404.00000000000006" y="124.9" width="30" height="163.1" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="419.00000000000006" y="119.9" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.70</text><text x="621.3333333333334" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">十五人团队</text><rect x="586.3333333333334" y="229.75" width="30" height="58.25" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="601.3333333333334" y="224.75" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.25</text><rect x="621.3333333333334" y="113.25" width="30" height="174.75" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="636.3333333333334" y="108.25" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.75</text><rect x="88" y="336" width="14" height="14" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="108" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">HHI 判定线</text><rect x="233" y="336" width="14" height="14" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="253" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">备份覆盖判定线</text><text x="730" y="368" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 3：五人、十人、十五人三档的阈值参照（模拟示例 S）。阈值随规模上升，固定阈值会在大团队中过度报警、在小团队中漏报。</p>
+<table>
+<thead>
+<tr>
+<th>规模</th>
+<th>负载判定线</th>
+<th>HHI 判定线</th>
+<th>备份覆盖判定线</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>五人</td>
+<td>团队均值的 1.4 倍</td>
+<td>0.35</td>
+<td>覆盖低于六成</td>
+<td>样本少，阈值宜宽</td>
+</tr>
+<tr>
+<td>十人</td>
+<td>团队均值的 1.5 倍</td>
+<td>0.30</td>
+<td>覆盖低于七成</td>
+<td>默认档</td>
+</tr>
+<tr>
+<td>十五人</td>
+<td>团队均值的 1.6 倍</td>
+<td>0.25</td>
+<td>覆盖低于七成五</td>
+<td>规模大，阈值宜严</td>
+</tr>
+</tbody></table>
+<p>判定时同时查看分位数与零模型对比。绝对阈值只用于展示，不直接触发“高风险”标签。零模型指保持节点数与边数不变、随机重连生成的对照图；标准化分数表示实际值偏离随机均值的程度。</p>
+<h3>3.4 稳定性与零模型</h3>
+<p>稳定性使用重采样评估：对记录或任务进行有放回抽样，重复不少于两百次，每次重算指标与 Top-5 风险集合，统计集合重合度。重合度不低于 0.6 的指标可以展示排名；低于 0.6 的指标只展示集合与区间。</p>
+<p>模拟结果如图 4。图中数值为模拟示例（S），仅用于说明稳定性差异如何呈现。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 4：指标的稳定性（模拟示例）</text><line x1="65" y1="265" x2="730" y2="265" stroke="#d9dee4" stroke-width="1" /><text x="55" y="269" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.0</text><line x1="65" y1="223" x2="730" y2="223" stroke="#d9dee4" stroke-width="1" /><text x="55" y="227" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.2</text><line x1="65" y1="181" x2="730" y2="181" stroke="#d9dee4" stroke-width="1" /><text x="55" y="185" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.4</text><line x1="65" y1="139" x2="730" y2="139" stroke="#d9dee4" stroke-width="1" /><text x="55" y="143" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.6</text><line x1="65" y1="97" x2="730" y2="97" stroke="#d9dee4" stroke-width="1" /><text x="55" y="101" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0.8</text><line x1="65" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="55" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">1.0</text><line x1="65" y1="55" x2="65" y2="265" stroke="#22303c" stroke-width="1.2" /><line x1="65" y1="265" x2="730" y2="265" stroke="#22303c" stroke-width="1.2" /><text x="18" y="160" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 18 160)">Top-5 重合度</text><rect x="94.41666666666666" y="92.80000000000001" width="52" height="172.2" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="120.41666666666666" y="86.80000000000001" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.82</text><text x="120.41666666666666" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">单点覆盖</text><rect x="205.24999999999997" y="115.9" width="52" height="149.1" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="231.24999999999997" y="109.9" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.71</text><text x="231.24999999999997" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">割点</text><rect x="316.0833333333333" y="130.6" width="52" height="134.4" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="342.0833333333333" y="124.6" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.64</text><text x="342.0833333333333" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">介数 Top-5</text><rect x="426.9166666666667" y="80.19999999999999" width="52" height="184.8" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="452.9166666666667" y="74.19999999999999" font-size="10.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">0.88</text><text x="452.9166666666667" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">HHI</text><rect x="537.75" y="149.5" width="52" height="115.50000000000001" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="563.75" y="143.5" font-size="10.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.55</text><text x="563.75" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">Gini</text><rect x="648.5833333333333" y="143.2" width="52" height="121.8" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="674.5833333333333" y="137.2" font-size="10.5" fill="#d9822b" text-anchor="middle" font-weight="bold">0.58</text><text x="674.5833333333333" y="289" font-size="11" fill="#22303c" text-anchor="middle" font-weight="normal">角色重叠</text><line x1="65" y1="139" x2="730" y2="139" stroke="#c0504d" stroke-width="1.6" stroke-dasharray="6,4"/><text x="69" y="47" font-size="10" fill="#c0504d" text-anchor="start" font-weight="normal">红色虚线为展示门槛 0.60</text><text x="65" y="340" font-size="10.5" fill="#444" text-anchor="start" font-weight="normal">低于门槛的指标只展示集合与区间，不展示精确排名。</text><text x="736" y="348" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 4：六个指标的重采样稳定性（模拟示例 S）。HHI 与单点覆盖稳定，Gini 与角色重叠低于 0.6，应标注“仅作参考”。</p>
+<p>零模型用于区分真实集中与随机波动。实际值高于随机图百分之九十五分位时，才可表述为“集中程度高于随机水平”。零模型不适用于节点数少于五的图。</p>
+<h3>3.5 冗余处理与面板容量</h3>
+<p>指标之间高度相关时，同时展示会增加误读风险。建议如下。</p>
+<table>
+<thead>
+<tr>
+<th>指标组合</th>
+<th>相关性判断</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HHI 与 Gini</td>
+<td>高</td>
+<td>保留 HHI，Gini 移入附录</td>
+</tr>
+<tr>
+<td>介数与割点</td>
+<td>中</td>
+<td>分层展示，割点在前</td>
+</tr>
+<tr>
+<td>割点与支配点</td>
+<td>低</td>
+<td>同时保留，分别用于无向与有向依赖</td>
+</tr>
+<tr>
+<td>单点标记与备份覆盖</td>
+<td>高</td>
+<td>合并为一张“单点风险”卡</td>
+</tr>
+<tr>
+<td>角色重叠与共管比例</td>
+<td>高</td>
+<td>保留角色重叠</td>
+</tr>
+</tbody></table>
+<p>面板最多六个指标，分为三组：单点风险（单点标记、备份覆盖）、集中风险（HHI、Top-5 集中度）、重叠风险（角色重叠、割点或支配点）。每组两个，避免堆砌。</p>
+<h3>3.6 盲评与误读测试</h3>
+<p>盲评用于检验算法排序是否符合业务判断。方法：选取十个风险项，隐藏算法结果，请两位负责人独立排序，计算与算法排序的一致率。一致率低于六成时，检查指标口径或权重，而不是直接调整阈值。</p>
+<p>误读测试用于检验指标是否被理解为个人评价。方法：向未参与建模的成员展示指标卡，询问“这是否表示某人表现不好”，记录回答类型。模拟结果如图 5。图中比例为模拟示例（S）。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="250" viewBox="0 0 760 250" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 5：误读测试的回答分布（模拟示例）</text><rect x="60" y="80" width="554.4" height="64" rx="0" fill="#4a8f5b" stroke="none" stroke-width="1" /><text x="337.2" y="118" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">84%</text><rect x="614.4" y="80" width="59.4" height="64" rx="0" fill="#d9822b" stroke="none" stroke-width="1" /><text x="644.1" y="118" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">9%</text><rect x="673.8" y="80" width="46.2" height="64" rx="0" fill="#7a7a7a" stroke="none" stroke-width="1" /><text x="696.9" y="118" font-size="15" fill="#fff" text-anchor="middle" font-weight="bold">7%</text><text x="60" y="174" font-size="11" fill="#4a8f5b" text-anchor="start" font-weight="normal">正确理解 84%</text><text x="240" y="174" font-size="11" fill="#d9822b" text-anchor="start" font-weight="normal">误读为个人评价 9%</text><text x="460" y="174" font-size="11" fill="#7a7a7a" text-anchor="start" font-weight="normal">无法判断 7%</text><text x="60" y="205" font-size="11" fill="#444" text-anchor="start" font-weight="normal">通过标准：不少于八成受访者不把指标理解为个人评价。</text><text x="736" y="238" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 5：误读测试的回答分布（模拟示例 S）。仍有部分受访者把指标理解为个人评价，说明解释话术与界面文案需要加强。</p>
+<p>误读测试的通过标准为：不少于八成受访者不把指标理解为个人评价。未通过时，优先修改文案与排序展示方式，不修改指标本身。</p>
+<h3>3.7 面板信息架构</h3>
+<p>面板按“风险清单、指标卡、下钻”三层组织。风险清单按严重度排序，每项显示位置名称、风险类型、证据数量与稳定性。指标卡显示当前值、阈值、样本量、稳定性与解释。下钻路径为：指标、贡献最大的位置、相关任务、原始证据，全程可回退。</p>
+<p>排序依据必须可见。用户点击“为什么排在前面”时，展示贡献最大的三个因素及其数值，而不是只显示总分。</p>
+<h2>4. 对设计的影响</h2>
+<h3>4.1 风险清单</h3>
+<p>清单以位置为单位，不以人为单位。每个位置显示风险类型、涉及任务数、备份状态与最近活动时间。空位与共管位置单独标记，不与普通位置混排。</p>
+<h3>4.2 指标卡</h3>
+<p>指标卡固定包含六项：一句话解释、当前值、样本量、稳定性、阈值来源、“这说明与不说明”。缺少任一项时，卡片不完整，不得上线。数据不足时显示灰色并写明原因，不显示绿色。</p>
+<h3>4.3 下钻与对比</h3>
+<p>下钻路径保存为可分享的链接，便于评审复现。对比视图按字段展示两次计算的差值与区间，区间重叠时标注“未观察到显著差异”。</p>
+<h3>4.4 阈值配置</h3>
+<p>默认阈值锁定为“官方口径”，高级用户可调整但需记录操作人与理由。调整后的结果标注“自定义口径”，不得与官方结果混排。</p>
+<h2>5. 未决问题</h2>
+<table>
+<thead>
+<tr>
+<th>未决项</th>
+<th>状态</th>
+<th>原因</th>
+<th>下一步</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>关键任务标记口径</td>
+<td>未统一</td>
+<td>由谁标记、标记标准未定</td>
+<td>与 B-02 关键决定口径对齐</td>
+</tr>
+<tr>
+<td>三种投影的最终选择</td>
+<td>未验证</td>
+<td>需要在真实图上计算</td>
+<td>用两个团队各算一遍</td>
+</tr>
+<tr>
+<td>阈值三档的数值</td>
+<td>未校准</td>
+<td>缺少真实分布</td>
+<td>收集至少两个团队的数据</td>
+</tr>
+<tr>
+<td>零模型实现</td>
+<td>未实现</td>
+<td>需保持度序列的随机重连</td>
+<td>采用配置模型生成对照图</td>
+</tr>
+<tr>
+<td>稳定性门槛</td>
+<td>未实测</td>
+<td>0.6 为初始值</td>
+<td>用重采样结果校准</td>
+</tr>
+<tr>
+<td>盲评样本</td>
+<td>未组织</td>
+<td>需要两位负责人</td>
+<td>选取十个风险项试点</td>
+</tr>
+<tr>
+<td>误读测试</td>
+<td>未执行</td>
+<td>需要非专家受访者</td>
+<td>招募五至八名成员</td>
+</tr>
+<tr>
+<td>面板容量</td>
+<td>未验证</td>
+<td>六个为初始上限</td>
+<td>用可用性测试检验</td>
+</tr>
+</tbody></table>
+<h2>6. 下一步</h2>
+<ol>
+<li>在两个真实团队上分别构造三种投影，记录割点与单点集合是否为空。</li>
+<li>实现指标脚本与零模型，输出实际值、随机均值与标准化分数。</li>
+<li>用重采样计算六个指标的稳定性与 Top-5 重合度，确定展示级别。</li>
+<li>组织两位负责人盲评十个风险项，计算与算法排序的一致率。</li>
+<li>执行误读测试，记录误解类型并修改文案。</li>
+<li>按六个指标完成面板原型，做一次可用性测试并记录下钻耗时。</li>
+</ol>
+<h2>7. 验收对照</h2>
+<table>
+<thead>
+<tr>
+<th>验收标准</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Top-5 风险与人工盲评一致率不低于六成</td>
+<td>未完成</td>
+<td>需真实风险项与盲评</td>
+</tr>
+<tr>
+<td>阈值在五、十、十五人三档均有解释</td>
+<td>方法通过，数值未校准</td>
+<td>分档规则已定义</td>
+</tr>
+<tr>
+<td>至少一种投影在十人团队给出非空单点集合</td>
+<td>模拟满足</td>
+<td>关键任务图为非空，待真实图验证</td>
+</tr>
+<tr>
+<td>稳定性不足的指标明确标注</td>
+<td>通过</td>
+<td>展示级别规则已定义</td>
+</tr>
+<tr>
+<td>误读测试中不少于八成不理解为个人评价</td>
+<td>未完成</td>
+<td>需组织测试</td>
+</tr>
+<tr>
+<td>指标卡信息完整</td>
+<td>通过</td>
+<td>六项字段已定义</td>
+</tr>
+<tr>
+<td>不输出个人排名与绩效结论</td>
+<td>通过</td>
+<td>清单以位置为单位</td>
+</tr>
+</tbody></table>
+<div class="page-break"></div><h2>附录 A 公式、指标表与测试提纲</h2>
+<h3>A.1 术语与符号</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>投影</td>
+<td>由原始记录构造出的图结构，如共同参与图、关键任务图</td>
+</tr>
+<tr>
+<td>单点</td>
+<td>某一关键任务只有一个承担者的状态</td>
+</tr>
+<tr>
+<td>备份覆盖</td>
+<td>关键任务存在可替代承担者的比例</td>
+</tr>
+<tr>
+<td>零模型</td>
+<td>保持规模与密度、随机重连生成的对照图</td>
+</tr>
+<tr>
+<td>标准化分数</td>
+<td>实际值偏离随机均值的程度，以标准差为单位</td>
+</tr>
+<tr>
+<td>判定线</td>
+<td>用于标记风险的参照值，按规模分档</td>
+</tr>
+</tbody></table>
+<h3>A.2 公式与算例</h3>
+<p>HHI：</p>
+<div class="formula">HHI = Σ s<sub>i</sub><sup>2</sup>，其中 s<sub>i</sub> 为第 i 个位置的负载占比</div><p>算例：十个位置负载均等，每个占比 0.1，HHI 为 0.10；若两个位置各占 0.5，其余为零，HHI 为 0.50。归一化后可将 0.10 映射为零、0.50 映射为一。</p>
+<p>Gini：</p>
+<div class="formula">G = Σ<sub>i</sub> Σ<sub>j</sub> |x<sub>i</sub> − x<sub>j</sub>| ÷ (2 n<sup>2</sup> x̄)</div><p>算例：负载完全均等时 G 为零；全部集中于一个位置时 G 接近一。</p>
+<p>标准化分数：</p>
+<div class="formula">z = (X − μ<sub>null</sub>) ÷ σ<sub>null</sub></div><p>其中 X 为实际指标值，μ 与 σ 为零模型多次随机生成的均值与标准差。算例：实际值为 0.42，随机均值为 0.31，标准差为 0.04，则 z 为 2.75，高于百分之九十五分位。</p>
+<p>Jaccard 重合度：</p>
+<div class="formula">J(A, B) = |A ∩ B| ÷ |A ∪ B|</div><p>算例：两次重采样的 Top-5 交集为 4，并集为 6，则 J 为 0.67。</p>
+<h3>A.3 指标定义表</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>公式或计算方式</th>
+<th>输入</th>
+<th>适用规模</th>
+<th>失效条件</th>
+<th>展示级别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>加权负载</td>
+<td>任务权重之和</td>
+<td>任务、权重</td>
+<td>五至十五人</td>
+<td>权重未校准</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>单点标记</td>
+<td>关键任务承担者数等于一</td>
+<td>任务归属</td>
+<td>五至十五人</td>
+<td>归属缺失</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>备份覆盖</td>
+<td>有备份的关键任务数除以关键任务总数</td>
+<td>任务、备份</td>
+<td>五至十五人</td>
+<td>备份名义化</td>
+<td>主展示</td>
+</tr>
+<tr>
+<td>割点</td>
+<td>移除后连通分量增加</td>
+<td>无向图</td>
+<td>十人以上</td>
+<td>图接近完全图</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>支配点</td>
+<td>从入口到出口必经</td>
+<td>有向图</td>
+<td>五至十五人</td>
+<td>方向缺失</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>介数</td>
+<td>经过该点的最短路径比例</td>
+<td>无向图</td>
+<td>十人以上</td>
+<td>图过密</td>
+<td>结构视图</td>
+</tr>
+<tr>
+<td>HHI</td>
+<td>负载占比平方和</td>
+<td>负载</td>
+<td>五至十五人</td>
+<td>任务过少</td>
+<td>概览</td>
+</tr>
+<tr>
+<td>Gini</td>
+<td>负载分布不均程度</td>
+<td>负载</td>
+<td>五至十五人</td>
+<td>与 HHI 冗余</td>
+<td>仅参考</td>
+</tr>
+<tr>
+<td>角色重叠</td>
+<td>多人共同承担的任务比例</td>
+<td>共管记录</td>
+<td>五至十五人</td>
+<td>共管未记录</td>
+<td>概览</td>
+</tr>
+<tr>
+<td>Top-5 集中度</td>
+<td>前五位置负载占比</td>
+<td>负载</td>
+<td>五至十五人</td>
+<td>位置数少于五</td>
+<td>概览</td>
+</tr>
+</tbody></table>
+<h3>A.4 盲评流程</h3>
+<ol>
+<li>从风险清单中选取十个风险项，覆盖单点、集中、重叠三类。</li>
+<li>隐藏算法排序与分数，仅提供位置描述与证据摘要。</li>
+<li>两位负责人独立排序，不互相讨论。</li>
+<li>计算每位负责人排序与算法排序的一致率，取平均。</li>
+<li>对差异最大的三项进行访谈，记录判断依据。</li>
+<li>一致率低于六成时，复核指标口径，不直接调整阈值。</li>
+</ol>
+<h3>A.5 误读测试提纲</h3>
+<ol>
+<li>展示一张指标卡，询问“这张卡在说什么”。</li>
+<li>询问“这是否表示某个人表现不好”。</li>
+<li>询问“如果数据不足，卡片应该显示什么”。</li>
+<li>询问“你能否指出排在第一位的理由”。</li>
+<li>记录回答类型：正确理解、误读为个人评价、无法判断。</li>
+<li>统计各类比例，误读比例高于两成时修改文案。</li>
+</ol>
+<h3>A.6 阈值参照表</h3>
+<table>
+<thead>
+<tr>
+<th>规模</th>
+<th>负载判定线</th>
+<th>HHI 判定线</th>
+<th>备份覆盖判定线</th>
+<th>零模型样本数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>五人</td>
+<td>均值 1.4 倍</td>
+<td>0.35</td>
+<td>六成</td>
+<td>200</td>
+</tr>
+<tr>
+<td>十人</td>
+<td>均值 1.5 倍</td>
+<td>0.30</td>
+<td>七成</td>
+<td>200</td>
+</tr>
+<tr>
+<td>十五人</td>
+<td>均值 1.6 倍</td>
+<td>0.25</td>
+<td>七成五</td>
+<td>200</td>
+</tr>
+</tbody></table>
+<p>以上数值为初始参照，需用真实分布校准；在校准完成前，界面标注“初始口径”。</p>
+<h2>注释</h2>
+<ol>
+<li><strong>割点：</strong> 在无向图中，移除后会使图的连通分量增加的节点。割点存在说明该节点承担了不可替代的连接作用。</li>
+<li><strong>支配点：</strong> 在有向图中，从入口到出口的所有路径都必须经过的节点。支配点适用于表达依赖关系中的必经环节。</li>
+<li><strong>介数中心性：</strong> 经过某节点的最短路径数量占全部最短路径的比例，用于衡量节点在信息传递中的中转作用。</li>
+<li><strong>HHI：</strong> 赫芬达尔—赫希曼指数，用各位置负载占比的平方和衡量集中程度，取值越高表示越集中。</li>
+<li><strong>Gini：</strong> 基尼系数，衡量分布不均程度的常用指标，取值越高表示越不均。</li>
+<li><strong>标准化分数：</strong> 以标准差为单位表示实际值偏离参照均值的程度，常用符号为 z。绝对值越大，偏离越明显。</li>
+<li><strong>组织网络分析：</strong> 通过沟通与协作记录分析人与人之间实际连接的方法，常简称 ONA。</li>
+<li><strong>投影：</strong> 将原始的多关系数据转换为特定图结构的过程。不同投影保留不同的关系，回答不同的问题。</li>
+<li><strong>零模型：</strong> 在保持节点数与边数等基本特征的前提下随机生成的对照图，用于判断实际结构是否超出随机波动。</li>
+<li><strong>分位数：</strong> 将一组数值按大小排列后，位于某一百分比位置的值。分位数阈值可以随团队规模与分布自适应。</li>
+<li><strong>二部图：</strong> 节点分为两类、边只连接不同类节点的图。人—任务二部图可以直接表达谁承担了哪些任务。</li>
+<li><strong>角色重叠：</strong> 多个位置或多人共同承担同一类职责的现象。角色重叠既可能提供备份，也可能造成责任不清。</li>
+<li><strong>Top-5 集中度：</strong> 负载最高的五个位置占总负载的比例，用于快速判断是否过度集中。</li>
+<li><strong>重采样稳定性：</strong> 通过反复抽样重算指标，观察结果是否保持一致。稳定性低说明指标对样本变化过于敏感。</li>
+<li><strong>盲评：</strong> 评审者在不知道算法结果的情况下独立判断，用于检验算法排序是否符合业务经验。</li>
+<li><strong>误读测试：</strong> 向未参与建模的成员展示指标，检查其是否把结构指标误解为个人评价的方法。</li>
+</ol>
+<h2>AI 使用说明</h2>
+<ul>
+<li>是否使用：是</li>
+<li>使用工具：Qoder</li>
+<li>参与环节：资料整理、结构与初稿撰写、图表生成与排版</li>
+<li>人工核验方式：待调研人 Dtao 核对来源、数据与结论</li>
+<li>本人确认：待调研人签署确认</li>
+</ul>
+
+</body>
+</html>

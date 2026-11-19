@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>B-07 任务去重</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "SimSun", sans-serif;
+  font-size: 10pt; line-height: 1.65; color: #1f2933;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+h1 { font-size: 19pt; text-align: center; margin: 4mm 0 5mm; line-height: 1.35; }
+h2 { font-size: 14pt; margin: 7mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.4pt solid #2f6fb0; page-break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 5mm 0 2mm; page-break-after: avoid; }
+p { margin: 2mm 0; text-align: justify; }
+ul, ol { margin: 2mm 0 2mm 7mm; padding-left: 0; }
+li { margin: 1mm 0; }
+table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 8.8pt; page-break-inside: auto; }
+th, td { border: 0.6pt solid #9aa5b1; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+th { background: #eef3f8; font-weight: 600; }
+tr { page-break-inside: avoid; }
+mark { background: #fff1a8; padding: 0 0.5mm; }
+sup { font-size: 7pt; color: #2f6fb0; }
+.formula { margin: 2.5mm 0; padding: 2mm 3mm; background: #f7f9fb; border-left: 2.5pt solid #2f6fb0; font-family: "Consolas", "Microsoft YaHei", monospace; font-size: 10pt; }
+.figure-svg { margin: 3mm 0 1mm; page-break-inside: avoid; }
+.figure-svg svg { width: 100%; height: auto; display: block; }
+img { max-width: 100%; page-break-inside: avoid; }
+.page-break { page-break-before: always; height: 0; margin: 0; }
+code { font-family: "Consolas", monospace; background: #f1f3f5; padding: 0 1mm; border-radius: 1mm; }
+blockquote { margin: 3mm 0; padding: 2mm 3mm; border-left: 2.5pt solid #9aa5b1; color: #444; }
+.toc { margin: 2mm 0; line-height: 1.75; }
+.toc-two { columns: 2; column-gap: 12mm; line-height: 1.7; }
+</style>
+</head>
+<body>
+<h1>B-07 同一任务跨记录应如何去重、演化与合并</h1>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>调研人</td>
+<td>Dtao</td>
+</tr>
+<tr>
+<td>完成日期</td>
+<td>2026-11-19</td>
+</tr>
+<tr>
+<td>对应单子</td>
+<td>资料库「调研任务单」之 B-07-task-dedup</td>
+</tr>
+<tr>
+<td>报告版本</td>
+<td>v1.0</td>
+</tr>
+<tr>
+<td>状态</td>
+<td>部分完成：合并规则、状态机与证据链结构已定义；50+50 对照集、极端重复测试与去重前后实测尚未完成</td>
+</tr>
+</tbody></table>
+<p><strong>数据标识说明：</strong> 本报告中的任务数量、合并比例、偏差率与图表数值均为<strong>模拟示例（S）</strong>，统一标记为“模拟示例（S）”。S 数据仅用于说明规则如何运作，不代表任何真实团队的任务清单，也不作为调研证据。真实记录取得后，应以相同口径重算并替换。</p>
+<p><strong>阅读说明：</strong> 第 1 节给出结论；第 2 节区分四类容易混淆的任务关系；第 3 节给出合并规则、阈值与状态机；第 4 节说明对时间线、合并卡与指标的影响；第 5 至 7 节列出未决问题、下一步与验收对照；附录提供公式、状态转移表与对照集构建方法。</p>
+<h2>摘要</h2>
+<p>本报告回答一个直接影响负载可信度的问题：同一件事在周一、周三、周五被分别提到，系统应依据什么判断它们是同一任务，以及合并之后状态与证据如何保留。结论是：合并判定采用五因素加权，不使用单一文本相似度；合并键分为强键与弱键，强键直接合并，弱键进入人工确认；阈值默认偏向保守，因为错误合并的代价高于错误拆分。</p>
+<p>任务状态固定为七个：提出、确认、进行、阻塞、完成、取消、复活。状态之间允许的转移以表格固定，非法转移给出提示而不静默接受。父子关系与前置依赖分开表达：前者表示“B 是 A 的一部分”，后者表示“先做 A 才能做 B”，二者使用不同的边类型与语言线索。</p>
+<p>合并只建立关联，不覆盖原始记录。每条合并后的任务保留全部原始提及、来源数与最后更新时间，用户可展开查看每一次提及与证据。去重前后必须对比任务量、负载与 Top-5 风险；任务量偏差超过两成时，视为合并规则失效并回退。</p>
+<p>模拟示例表明，该规则能够把措辞各异的多次提及合并为一条并保留证据；但 50+50 对照集、极端重复测试与去重前后实测尚未执行，因此本报告的结论属于方法层结论。</p>
+<h2>目录</h2>
+<div class="toc toc-two">
+1. 结论<br>
+2. 术语与适用性<br>
+3. 合并与状态规则建议<br>
+4. 对设计的影响<br>
+5. 未决问题<br>
+6. 下一步<br>
+7. 验收对照<br>
+附录 A 公式、状态表与模板<br>
+注释
+</div><hr>
+<h2>1. 结论</h2>
+<ol>
+<li><strong>合并判定采用五因素加权。</strong> 动作动词、对象名词、责任人、时间邻近、上下文共现共同决定两条记录是否指向同一任务；单一文本相似度只作为辅助特征，不作为唯一依据。</li>
+<li><strong>合并键分为强键与弱键。</strong> 强键包括明确编号、明确引用、同一对象加同一截止时间；强键命中时直接合并。弱键需要综合评分，评分落在灰区时进入人工确认。</li>
+<li><strong>阈值默认偏保守。</strong> 错误合并会把两件事并成一件，导致负载、依赖与风险同时失真；错误拆分只增加条数，较易通过人工发现。默认合并阈值为 0.85，0.60 至 0.85 为灰区<sup>[1]</sup>，低于 0.60 不合并。</li>
+<li><strong>状态机固定为七态。</strong> 提出、确认、进行、阻塞、完成、取消、复活<sup>[2]</sup>；每次状态变化记录时间、操作人与依据，不覆盖历史状态。</li>
+<li><strong>父子与前置依赖分开。</strong> 包含关系与先后关系使用不同边类型；前者回答任务由哪些部分组成，后者回答执行顺序。</li>
+<li><strong>证据链只追加。</strong> 合并建立关联而不是删除记录；每条任务保留全部提及、来源数、首次提出时间与最后更新时间。</li>
+<li><strong>负载只计未完成任务。</strong> 完成与取消的任务保留在时间线中，但不计入当前负载；复活任务从复活时间起重新计入。</li>
+<li><strong>去重前后必须对比。</strong> 任务量、人均负载、Top-5 风险集合三项同时对比；任务量偏差超过百分之二十时回退规则并检查样本。</li>
+</ol>
+<h2>2. 术语与适用性</h2>
+<h3>2.1 四类容易混淆的任务关系</h3>
+<p>同一段材料中出现的多条任务描述，可能属于四种不同关系。混淆会导致错误合并或错误拆分。</p>
+<table>
+<thead>
+<tr>
+<th>关系</th>
+<th>判定依据</th>
+<th>典型语言线索</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>同一任务</td>
+<td>动作、对象、责任人一致，时间相近</td>
+<td>“还是上次那件事”“继续跟进”</td>
+<td>合并为一条，保留多次提及</td>
+</tr>
+<tr>
+<td>相似但不同</td>
+<td>动作相近，对象不同</td>
+<td>“整理报名表”与“整理签到表”</td>
+<td>不合并，标记为相似任务</td>
+</tr>
+<tr>
+<td>父子任务</td>
+<td>一条任务是另一条的组成部分</td>
+<td>“其中”“包括”“拆成”</td>
+<td>建立包含关系，不合并</td>
+</tr>
+<tr>
+<td>前置依赖</td>
+<td>完成一条才能开始另一条</td>
+<td>“先……再……”“等……之后”</td>
+<td>建立有向依赖，不合并</td>
+</tr>
+</tbody></table>
+<p>四类关系必须在数据模型中有不同表示。把父子任务合并会丢失结构，把前置依赖合并会丢失顺序。</p>
+<h3>2.2 与事件共指、任务跟踪器的关系</h3>
+<p>事件共指<sup>[3]</sup>研究同一事件在不同文本中的多次提及如何归并，其方法可以借鉴，但目标不同：事件共指关注“是否同一事件”，本任务还要保留状态演化与责任归属。</p>
+<p>任务跟踪器的生命周期提供了状态命名的参照。开源与商业任务系统通常包含待办、进行、完成、取消等状态，但较少处理“同一任务在聊天中被多次随口提及”的场景。本报告的状态机在此基础上增加了“提出”和“复活”两个状态。</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>事件共指</th>
+<th>任务跟踪器</th>
+<th>本报告的合并规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>处理对象</td>
+<td>文本中的事件提及</td>
+<td>已创建的任务条目</td>
+<td>跨记录的任務提及与任务实例</td>
+</tr>
+<tr>
+<td>核心判断</td>
+<td>是否同一事件</td>
+<td>状态流转</td>
+<td>是否同一任务，以及状态如何演化</td>
+</tr>
+<tr>
+<td>证据保留</td>
+<td>提及集合</td>
+<td>操作历史</td>
+<td>提及集合加状态历史</td>
+</tr>
+<tr>
+<td>主要风险</td>
+<td>过度合并</td>
+<td>状态失真</td>
+<td>两者兼有</td>
+</tr>
+</tbody></table>
+<h3>2.3 适用条件与失效条件</h3>
+<p>适用条件：记录中存在可识别的动作与对象；同一任务至少出现两次；记录时间可比较；责任人可识别或可标注为未知。</p>
+<p>失效条件：任务命名高度不一致且无上下文；记录跨越过长的时间窗；组织处于频繁重组阶段；用户把合并结果用于个人产出统计。出现任一条件时，合并结果只能作为候选，必须人工确认。</p>
+<h2>3. 合并与状态规则建议</h2>
+<h3>3.1 合并判定的五个因素</h3>
+<p>合并评分由五个因素加权求和，权重建议如下。权重是初始值，需用 50+50 对照集校准。</p>
+<table>
+<thead>
+<tr>
+<th>因素</th>
+<th>作用</th>
+<th>初始权重</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>动作动词</td>
+<td>判断是否在做同一类事</td>
+<td>0.25</td>
+<td>“整理”“提交”“确认”等，需做同义词归一</td>
+</tr>
+<tr>
+<td>对象名词</td>
+<td>判断作用对象是否相同</td>
+<td>0.30</td>
+<td>权重最高，对象不同通常不是同一任务</td>
+</tr>
+<tr>
+<td>责任人</td>
+<td>判断承担者是否一致</td>
+<td>0.15</td>
+<td>责任人未知时不扣分，按剩余权重归一</td>
+</tr>
+<tr>
+<td>时间邻近</td>
+<td>判断是否处于同一工作周期</td>
+<td>0.15</td>
+<td>超过时间窗<sup>[4]</sup>则该项为零</td>
+</tr>
+<tr>
+<td>上下文共现</td>
+<td>判断是否在同一讨论串中被提及</td>
+<td>0.15</td>
+<td>同一会议、同一群聊话题视为共现</td>
+</tr>
+</tbody></table>
+<p>评分公式见附录 A.2。分数只用于排序与分档，不直接作为“同一任务”的证明；每一档都必须有对应的处理动作。</p>
+<h3>3.2 合并键与阈值</h3>
+<p>强键命中时跳过评分，直接合并。强键包括：记录中出现明确编号；后一条记录明确引用前一条；对象与截止时间同时相同。强键合并仍需记录依据，便于撤销。</p>
+<p>弱键按评分分三档处理，如图 1。图中数值为模拟示例（S），仅用于说明分档方式。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 1：合并评分的三个区间（模拟示例）</text><rect x="60" y="90" width="396" height="70" rx="0" fill="#eef0f2" stroke="#7a7a7a" stroke-width="1.4" /><text x="258" y="120" font-size="13" fill="#7a7a7a" text-anchor="middle" font-weight="bold">不合并</text><text x="258" y="142" font-size="10.5" fill="#555" text-anchor="middle" font-weight="normal">保留为两条</text><rect x="456" y="90" width="165" height="70" rx="0" fill="#fff1d6" stroke="#d9822b" stroke-width="1.4" /><text x="538.5" y="120" font-size="13" fill="#d9822b" text-anchor="middle" font-weight="bold">灰区</text><text x="538.5" y="142" font-size="10.5" fill="#555" text-anchor="middle" font-weight="normal">人工确认</text><rect x="621" y="90" width="99" height="70" rx="0" fill="#e2f0e6" stroke="#4a8f5b" stroke-width="1.4" /><text x="670.5" y="120" font-size="13" fill="#4a8f5b" text-anchor="middle" font-weight="bold">直接合并</text><text x="670.5" y="142" font-size="10.5" fill="#555" text-anchor="middle" font-weight="normal">记录依据</text><line x1="60" y1="160" x2="60" y2="166" stroke="#888" stroke-width="1" /><text x="60" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.0</text><line x1="126" y1="160" x2="126" y2="166" stroke="#888" stroke-width="1" /><line x1="192" y1="160" x2="192" y2="166" stroke="#888" stroke-width="1" /><text x="192" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.2</text><line x1="258" y1="160" x2="258" y2="166" stroke="#888" stroke-width="1" /><line x1="324" y1="160" x2="324" y2="166" stroke="#888" stroke-width="1" /><text x="324" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.4</text><line x1="390" y1="160" x2="390" y2="166" stroke="#888" stroke-width="1" /><line x1="456" y1="160" x2="456" y2="166" stroke="#888" stroke-width="1" /><text x="456" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.6</text><line x1="522" y1="160" x2="522" y2="166" stroke="#888" stroke-width="1" /><line x1="588" y1="160" x2="588" y2="166" stroke="#888" stroke-width="1" /><text x="588" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">0.8</text><line x1="654" y1="160" x2="654" y2="166" stroke="#888" stroke-width="1" /><line x1="720" y1="160" x2="720" y2="166" stroke="#888" stroke-width="1" /><text x="720" y="184" font-size="10" fill="#555" text-anchor="middle" font-weight="normal">1.0</text><text x="64" y="78" font-size="11" fill="#444" text-anchor="start" font-weight="normal">评分</text><text x="60" y="220" font-size="11" fill="#444" text-anchor="start" font-weight="normal">说明：错误合并的代价高于错误拆分，阈值默认偏保守；灰区必须人工确认并记录理由。</text><text x="60" y="245" font-size="11" fill="#444" text-anchor="start" font-weight="normal">强键命中时跳过评分直接合并，但仍需记录依据，便于撤销。</text><text x="736" y="288" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 1：合并评分的三个区间（模拟示例 S）。直接合并区不做人工确认，灰区必须人工确认，不合并区直接保留为两条。</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>分数范围</th>
+<th>处理动作</th>
+<th>记录要求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>直接合并</td>
+<td>不低于 0.85</td>
+<td>自动合并</td>
+<td>记录命中的强键或高分因素</td>
+</tr>
+<tr>
+<td>灰区</td>
+<td>0.60 至 0.85</td>
+<td>人工确认</td>
+<td>展示并排对比与差异高亮</td>
+</tr>
+<tr>
+<td>不合并</td>
+<td>低于 0.60</td>
+<td>保留两条</td>
+<td>可标记为相似任务，供后续参考</td>
+</tr>
+</tbody></table>
+<p>阈值偏向保守的原因：错误合并会同时改变任务量、负载与依赖，且不易被用户发现；错误拆分只会增加条数，用户可以一眼看出重复并手动合并。</p>
+<h3>3.3 相似但不同的反例规则</h3>
+<p>以下情形默认不合并，除非强键命中。</p>
+<table>
+<thead>
+<tr>
+<th>情形</th>
+<th>示例</th>
+<th>规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对象不同</td>
+<td>整理报名表与整理签到表</td>
+<td>对象名词不同，评分封顶 0.55</td>
+</tr>
+<tr>
+<td>阶段不同</td>
+<td>起草方案与评审方案</td>
+<td>动作不同，视为同一任务的不同阶段，建立阶段关系而非合并</td>
+</tr>
+<tr>
+<td>责任人不同</td>
+<td>甲负责采购、乙负责验收</td>
+<td>责任人不同且对象不同，不合并</td>
+</tr>
+<tr>
+<td>时间跨度过大</td>
+<td>三月的“更新名单”与十一月的“更新名单”</td>
+<td>超出时间窗，不合并</td>
+</tr>
+<tr>
+<td>否定表述</td>
+<td>“不再跟进供应商”与“跟进供应商”</td>
+<td>否定词改变任务含义，不合并</td>
+</tr>
+</tbody></table>
+<p>否定表述需要单独处理。抽取阶段应保留否定标记，合并阶段遇到否定不一致时直接判定为不同任务。</p>
+<h3>3.4 状态机</h3>
+<p>任务状态固定为七个：提出、确认、进行、阻塞、完成、取消、复活。状态机<sup>[5]</sup>如图 2。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="360" viewBox="0 0 760 360" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 2：任务状态机</text><rect x="40" y="60" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="100" y="92" font-size="13" fill="#2f6fb0" text-anchor="middle" font-weight="bold">提出</text><rect x="200" y="60" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="260" y="92" font-size="13" fill="#2f6fb0" text-anchor="middle" font-weight="bold">确认</text><rect x="360" y="60" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#2f6fb0" stroke-width="1.4" /><text x="420" y="92" font-size="13" fill="#2f6fb0" text-anchor="middle" font-weight="bold">进行</text><rect x="520" y="60" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#4a8f5b" stroke-width="1.4" /><text x="580" y="92" font-size="13" fill="#4a8f5b" text-anchor="middle" font-weight="bold">完成</text><rect x="360" y="190" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#d9822b" stroke-width="1.4" /><text x="420" y="222" font-size="13" fill="#d9822b" text-anchor="middle" font-weight="bold">阻塞</text><rect x="120" y="190" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#7a7a7a" stroke-width="1.4" /><text x="180" y="222" font-size="13" fill="#7a7a7a" text-anchor="middle" font-weight="bold">取消</text><rect x="520" y="190" width="120" height="54" rx="6" fill="#f7f9fb" stroke="#4a8f5b" stroke-width="1.4" /><text x="580" y="222" font-size="13" fill="#4a8f5b" text-anchor="middle" font-weight="bold">复活</text><line x1="160" y1="87" x2="197" y2="87" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><line x1="320" y1="87" x2="357" y2="87" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><line x1="480" y1="87" x2="517" y2="87" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><line x1="420" y1="114" x2="420" y2="186" stroke="#d9822b" stroke-width="1.6"  marker-end="url(#arrowo)"/><line x1="400" y1="190" x2="400" y2="118" stroke="#d9822b" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrowo)"/><line x1="240" y1="114" x2="200" y2="186" stroke="#7a7a7a" stroke-width="1.6"  marker-end="url(#arrow)"/><line x1="580" y1="114" x2="580" y2="186" stroke="#4a8f5b" stroke-width="1.6"  marker-end="url(#arrowg)"/><line x1="520" y1="205" x2="484" y2="120" stroke="#4a8f5b" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrowg)"/><polyline points="180,244 180,285 580,285 580,246" fill="none" stroke="#7a7a7a" stroke-width="1.6" stroke-dasharray="5,4" marker-end="url(#arrow)"/><text x="40" y="322" font-size="10.5" fill="#444" text-anchor="start" font-weight="normal">实线为常规转移；虚线为异常转移。复活只能从完成或取消进入；非法转移需提示并填写理由。</text><text x="736" y="348" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 2：任务状态机。实线为常规转移，虚线为异常转移；复活只能从完成或取消进入。</p>
+<p>允许的转移如下：提出可进入确认或取消；确认可进入进行、阻塞或取消；进行可进入阻塞、完成或取消；阻塞可回到进行或取消；完成可进入复活；取消可进入复活。其余转移视为非法，界面给出提示并要求填写理由。</p>
+<p>状态判定以记录中的明确表述为准。“已安排”“准备做”归入确认；“正在做”“已开始”归入进行；“卡在”“等对方”归入阻塞；“已完成”“已交付”归入完成；“不做了”“取消”归入取消。含糊表述不改变状态，保留原状态并标记待确认。</p>
+<h3>3.5 父子关系与前置依赖</h3>
+<p>两类关系使用不同边类型，不能共用一种“关联”。</p>
+<table>
+<thead>
+<tr>
+<th>关系</th>
+<th>边类型</th>
+<th>语言线索</th>
+<th>对指标的影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>包含</td>
+<td>父子边</td>
+<td>“其中”“包括”“拆成”“分为”</td>
+<td>父任务负载为子任务之和，不重复计算</td>
+</tr>
+<tr>
+<td>前置</td>
+<td>依赖边</td>
+<td>“先……再……”“等……之后”“需要先”</td>
+<td>影响关键路径与阻塞风险</td>
+</tr>
+</tbody></table>
+<p>判断顺序建议：先判断是否包含，再判断是否前置。包含关系通常伴随整体与部分的名词结构；前置关系通常伴随时间先后与条件结构。</p>
+<h3>3.6 证据链结构</h3>
+<p>合并后的任务必须能展开查看全部原始提及。证据链<sup>[6]</sup>字段建议如下。</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>是否必填</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>任务编号</td>
+<td>合并后任务的稳定编号</td>
+<td>是</td>
+</tr>
+<tr>
+<td>原始提及编号</td>
+<td>每次提及的唯一编号</td>
+<td>是</td>
+</tr>
+<tr>
+<td>记录编号与位置</td>
+<td>来源记录及句级位置</td>
+<td>是</td>
+</tr>
+<tr>
+<td>提及时间</td>
+<td>该次提及的发生时间</td>
+<td>是</td>
+</tr>
+<tr>
+<td>提及原文</td>
+<td>原句摘录，不改写</td>
+<td>是</td>
+</tr>
+<tr>
+<td>合并依据</td>
+<td>强键或评分因素</td>
+<td>是</td>
+</tr>
+<tr>
+<td>状态变化</td>
+<td>该次提及是否伴随状态变化</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<p>合并只追加关联，不删除原始记录。拆分时按关联解除，原始提及仍保留在原记录中。</p>
+<h3>3.7 去重前后的评估</h3>
+<p>评估四项：错误合并率、错误拆分率、任务量偏差、人工确认工作量。前两项用 50+50 对照集计算；第三项与人工计数比较；第四项统计灰区进入人工确认的比例。</p>
+<p>模拟对比见图 3 与图 4。图中数值为模拟示例（S），仅用于说明对比方式。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="380" viewBox="0 0 760 380" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 3：去重前后任务量对比（模拟示例）</text><line x1="78" y1="288" x2="730" y2="288" stroke="#d9dee4" stroke-width="1" /><text x="68" y="292" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0</text><line x1="78" y1="241.4" x2="730" y2="241.4" stroke="#d9dee4" stroke-width="1" /><text x="68" y="245.4" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">10</text><line x1="78" y1="194.8" x2="730" y2="194.8" stroke="#d9dee4" stroke-width="1" /><text x="68" y="198.8" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">20</text><line x1="78" y1="148.2" x2="730" y2="148.2" stroke="#d9dee4" stroke-width="1" /><text x="68" y="152.2" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">30</text><line x1="78" y1="101.6" x2="730" y2="101.6" stroke="#d9dee4" stroke-width="1" /><text x="68" y="105.6" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">40</text><line x1="78" y1="55" x2="730" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="68" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">50</text><line x1="78" y1="55" x2="78" y2="288" stroke="#22303c" stroke-width="1.2" /><line x1="78" y1="288" x2="730" y2="288" stroke="#22303c" stroke-width="1.2" /><text x="20" y="171.5" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 20 171.5)">任务数</text><text x="186.66666666666669" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">会议记录</text><rect x="151.66666666666669" y="138.88" width="30" height="149.12" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="166.66666666666669" y="133.88" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">32</text><rect x="186.66666666666669" y="176.16" width="30" height="111.84" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="201.66666666666669" y="171.16" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">24</text><text x="404.00000000000006" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">群聊记录</text><rect x="369.00000000000006" y="78.30000000000001" width="30" height="209.7" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="384.00000000000006" y="73.30000000000001" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">45</text><rect x="404.00000000000006" y="143.54" width="30" height="144.46" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="419.00000000000006" y="138.54" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">31</text><text x="621.3333333333334" y="312" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">任务描述</text><rect x="586.3333333333334" y="204.12" width="30" height="83.88" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="601.3333333333334" y="199.12" font-size="9.5" fill="#d9822b" text-anchor="middle" font-weight="bold">18</text><rect x="621.3333333333334" y="218.1" width="30" height="69.9" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="636.3333333333334" y="213.1" font-size="9.5" fill="#2f6fb0" text-anchor="middle" font-weight="bold">15</text><rect x="88" y="336" width="14" height="14" rx="2" fill="#d9822b" stroke="none" stroke-width="1" /><text x="108" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">去重前</text><rect x="233" y="336" width="14" height="14" rx="2" fill="#2f6fb0" stroke="none" stroke-width="1" /><text x="253" y="347" font-size="11" fill="#444" text-anchor="start" font-weight="normal">去重后</text><text x="730" y="368" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 3：三类记录去重前后的任务量（模拟示例 S）。群聊记录的重复提及最多，去重后任务量下降最明显。</p>
+<p><div class="figure-svg"><svg xmlns="http://www.w3.org/2000/svg" width="760" height="365" viewBox="0 0 760 365" font-family="'Microsoft YaHei','SimHei',sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#7a7a7a"/></marker><marker id="arrowo" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d9822b"/></marker><marker id="arrowg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#4a8f5b"/></marker><marker id="arrowb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2f6fb0"/></marker></defs><text x="380" y="28" font-size="16" fill="#22303c" text-anchor="middle" font-weight="bold">图 4：同一任务被提及十次时的合并过程（模拟示例）</text><line x1="75" y1="265" x2="720" y2="265" stroke="#d9dee4" stroke-width="1" /><text x="65" y="269" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">0</text><line x1="75" y1="223" x2="720" y2="223" stroke="#d9dee4" stroke-width="1" /><text x="65" y="227" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">2</text><line x1="75" y1="181" x2="720" y2="181" stroke="#d9dee4" stroke-width="1" /><text x="65" y="185" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">4</text><line x1="75" y1="139" x2="720" y2="139" stroke="#d9dee4" stroke-width="1" /><text x="65" y="143" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">6</text><line x1="75" y1="97" x2="720" y2="97" stroke="#d9dee4" stroke-width="1" /><text x="65" y="101" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">8</text><line x1="75" y1="55" x2="720" y2="55" stroke="#d9dee4" stroke-width="1" /><text x="65" y="59" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">10</text><line x1="75" y1="55" x2="75" y2="265" stroke="#22303c" stroke-width="1.2" /><line x1="75" y1="265" x2="720" y2="265" stroke="#22303c" stroke-width="1.2" /><text x="18" y="160" font-size="11" fill="#555" text-anchor="middle" font-weight="normal" transform="rotate(-90 18 160)">条数</text><polyline points="139.5,244 268.5,202 397.5,139 526.5,76 655.5,55" fill="none" stroke="#d9822b" stroke-width="2.6"/><polyline points="139.5,244 268.5,244 397.5,244 526.5,244 655.5,244" fill="none" stroke="#4a8f5b" stroke-width="2.6" stroke-dasharray="7,4"/><text x="139.5" y="289" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">第 1 周</text><circle cx="139.5" cy="244" r="4.5" fill="#fff" stroke="#d9822b" stroke-width="2" /><circle cx="139.5" cy="244" r="4.5" fill="#fff" stroke="#4a8f5b" stroke-width="2" /><text x="139.5" y="234" font-size="10" fill="#d9822b" text-anchor="middle" font-weight="bold">1</text><text x="268.5" y="289" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">第 2 周</text><circle cx="268.5" cy="202" r="4.5" fill="#fff" stroke="#d9822b" stroke-width="2" /><circle cx="268.5" cy="244" r="4.5" fill="#fff" stroke="#4a8f5b" stroke-width="2" /><text x="268.5" y="192" font-size="10" fill="#d9822b" text-anchor="middle" font-weight="bold">3</text><text x="397.5" y="289" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">第 3 周</text><circle cx="397.5" cy="139" r="4.5" fill="#fff" stroke="#d9822b" stroke-width="2" /><circle cx="397.5" cy="244" r="4.5" fill="#fff" stroke="#4a8f5b" stroke-width="2" /><text x="397.5" y="129" font-size="10" fill="#d9822b" text-anchor="middle" font-weight="bold">6</text><text x="526.5" y="289" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">第 4 周</text><circle cx="526.5" cy="76" r="4.5" fill="#fff" stroke="#d9822b" stroke-width="2" /><circle cx="526.5" cy="244" r="4.5" fill="#fff" stroke="#4a8f5b" stroke-width="2" /><text x="526.5" y="66" font-size="10" fill="#d9822b" text-anchor="middle" font-weight="bold">9</text><text x="655.5" y="289" font-size="11.5" fill="#22303c" text-anchor="middle" font-weight="normal">第 5 周</text><circle cx="655.5" cy="55" r="4.5" fill="#fff" stroke="#d9822b" stroke-width="2" /><circle cx="655.5" cy="244" r="4.5" fill="#fff" stroke="#4a8f5b" stroke-width="2" /><text x="655.5" y="45" font-size="10" fill="#d9822b" text-anchor="middle" font-weight="bold">10</text><text x="667.5" y="248" font-size="10" fill="#4a8f5b" text-anchor="start" font-weight="normal">合并后始终为 1 条</text><line x1="85" y1="327" x2="115" y2="327" stroke="#d9822b" stroke-width="2.6" /><text x="123" y="331" font-size="11" fill="#444" text-anchor="start" font-weight="normal">累计提及条数</text><line x1="265" y1="327" x2="295" y2="327" stroke="#4a8f5b" stroke-width="2.6" stroke-dasharray="7,4"/><text x="303" y="331" font-size="11" fill="#444" text-anchor="start" font-weight="normal">合并后任务数</text><text x="736" y="353" font-size="9.5" fill="#777" text-anchor="end" font-weight="normal">模拟示例（S），非真实调研数据</text>
+</svg>
+</div></p>
+<p>图 4：同一任务被提及十次时的累计提及数与合并后任务数（模拟示例 S）。合并后任务数保持为一条，提及数持续增长，证据链完整保留。</p>
+<p>任务量偏差的计算方式为：去重后任务数与人工计数之差的绝对值，除以人工计数。偏差超过百分之二十时，优先检查阈值是否过松或对象名词归一是否不足。</p>
+<h3>3.8 极端重复测试</h3>
+<p>测试方法：构造同一任务被提及十次、措辞各异的材料，检查系统是否合并为一条，以及证据链是否保留十次提及。通过标准为合并为一条且提及数不少于十。若出现两条以上，检查是否因对象表述差异导致评分不足；若出现零条，检查解析是否失败。</p>
+<p>该测试同时用于检查状态演化：十次提及中应包含提出、进行、完成等状态，时间线应完整呈现，不得只保留最后状态。</p>
+<h2>4. 对设计的影响</h2>
+<h3>4.1 任务时间线</h3>
+<p>时间线按时间顺序展示每次提及，标注说话人、原文摘要与状态变化。顶部显示来源数与最后更新时间，避免用户把合并后的任务误认为新任务。时间线支持按状态筛选，但不支持删除提及。</p>
+<h3>4.2 合并建议卡</h3>
+<p>合并建议卡并排显示两条记录，差异部分高亮，并说明“为什么认为是同一件事”。说明文字应列出命中的因素与分数，而不是只给一个总分。卡片提供合并、不合并、拆分三个动作，合并时可选择保留哪个标题与哪个截止时间。</p>
+<h3>4.3 拆分与撤销</h3>
+<p>拆分时显示将解除的关联与受影响的指标，确认后执行。合并与拆分均可撤销，撤销记录进入操作历史。撤销不删除任何原始提及。</p>
+<h3>4.4 指标联动</h3>
+<p>任务量、负载与 Top-5 风险在合并或拆分后立即重算，并显示变化前后对比。变化超过预设幅度时提示用户复核，避免一次误操作导致指标大幅波动。</p>
+<h2>5. 未决问题</h2>
+<table>
+<thead>
+<tr>
+<th>未决项</th>
+<th>状态</th>
+<th>原因</th>
+<th>下一步</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>五因素权重</td>
+<td>未校准</td>
+<td>缺少 50+50 对照集</td>
+<td>构建对照集后回归校准</td>
+</tr>
+<tr>
+<td>灰区宽度</td>
+<td>未定</td>
+<td>取决于人工确认成本</td>
+<td>用对照集统计不同宽度的错误率</td>
+</tr>
+<tr>
+<td>时间窗长度</td>
+<td>未定</td>
+<td>不同团队节奏差异大</td>
+<td>按团队配置，默认三十天</td>
+</tr>
+<tr>
+<td>对象名词归一</td>
+<td>未实现</td>
+<td>需要同义词表</td>
+<td>从真实记录中整理对象词表</td>
+</tr>
+<tr>
+<td>否定表述处理</td>
+<td>未验证</td>
+<td>样本不足</td>
+<td>在对照集中增加否定样例</td>
+</tr>
+<tr>
+<td>状态机覆盖率</td>
+<td>未验证</td>
+<td>需要二十条真实状态序列</td>
+<td>标注后统计非法转移比例</td>
+</tr>
+<tr>
+<td>负载去重口径</td>
+<td>未统一</td>
+<td>父子任务与共享任务并存</td>
+<td>与 B-02 位置模型对齐</td>
+</tr>
+<tr>
+<td>人工确认工作量</td>
+<td>未测量</td>
+<td>需要真实灰区样本</td>
+<td>统计每百条任务的确认次数</td>
+</tr>
+</tbody></table>
+<h2>6. 下一步</h2>
+<ol>
+<li>从三十条记录中整理 50 组同一任务与 50 组相似但不同的对照，形成固定测试集。</li>
+<li>用对照集校准五因素权重与灰区宽度，记录每档的错误合并率与错误拆分率。</li>
+<li>标注二十个任务的状态序列，验证七态状态机能否覆盖真实转移。</li>
+<li>实现证据链与合并撤销，确保任何一次合并都能展开并回退。</li>
+<li>执行极端重复测试与去重前后对比，计算任务量、负载与 Top-5 风险的变化。</li>
+<li>与 B-02 位置模型对齐负载口径，明确父子任务与共享任务的计算方式。</li>
+</ol>
+<h2>7. 验收对照</h2>
+<table>
+<thead>
+<tr>
+<th>验收标准</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>抽检 50 组，错误合并不高于一成</td>
+<td>未完成</td>
+<td>规则已定义，尚未实测</td>
+</tr>
+<tr>
+<td>抽检 50 组，错误拆分不高于一成</td>
+<td>未完成</td>
+<td>需对照集与人工判定</td>
+</tr>
+<tr>
+<td>去重后任务量与人工计数偏差不高于两成</td>
+<td>未完成</td>
+<td>需真实记录与人工计数</td>
+</tr>
+<tr>
+<td>每条合并任务可展开全部提及与证据</td>
+<td>通过</td>
+<td>证据链字段已定义</td>
+</tr>
+<tr>
+<td>状态机覆盖不少于九成真实序列</td>
+<td>未完成</td>
+<td>需标注二十条状态序列</td>
+</tr>
+<tr>
+<td>非法状态转移有提示</td>
+<td>通过</td>
+<td>转移表与提示规则已定义</td>
+</tr>
+<tr>
+<td>合并与拆分可撤销</td>
+<td>通过</td>
+<td>采用追加式关联与操作历史</td>
+</tr>
+</tbody></table>
+<div class="page-break"></div><h2>附录 A 公式、状态表与模板</h2>
+<h3>A.1 术语与符号</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>提及</td>
+<td>一条记录中对某个任务的一次描述</td>
+</tr>
+<tr>
+<td>合并</td>
+<td>将多次提及关联为一条任务，不删除原始记录</td>
+</tr>
+<tr>
+<td>拆分</td>
+<td>解除合并关联，恢复为多条任务</td>
+</tr>
+<tr>
+<td>强键</td>
+<td>命中后可直接合并的判定依据</td>
+</tr>
+<tr>
+<td>灰区</td>
+<td>需要人工确认的评分区间</td>
+</tr>
+<tr>
+<td>证据链</td>
+<td>合并任务所关联的全部原始提及与依据</td>
+</tr>
+</tbody></table>
+<h3>A.2 合并评分公式与算例</h3>
+<div class="formula">S = w<sub>1</sub> × a + w<sub>2</sub> × o + w<sub>3</sub> × p + w<sub>4</sub> × t + w<sub>5</sub> × c</div><p>其中 a 为动作相似度，o 为对象相似度，p 为责任人一致度，t 为时间邻近度，c 为上下文共现度；五项取值均在零到一之间；w 为权重，权重之和为一。责任人未知时，将该项权重按比例分配到其余四项。</p>
+<p>算例：a 为 0.9，o 为 0.8，p 为 1.0，t 为 0.9，c 为 0.7，按初始权重计算，S 为 0.86，进入直接合并区。</p>
+<p>任务量偏差：</p>
+<div class="formula">D = |N<sub>去重</sub> − N<sub>人工</sub>| ÷ N<sub>人工</sub></div><p>算例：去重后为 62 条，人工计数为 55 条，则 D 为 0.127，低于两成，视为通过。</p>
+<p>Top-5 风险变化使用 Jaccard 相似度：</p>
+<div class="formula">J(A, B) = |A ∩ B| ÷ |A ∪ B|</div><p>算例：去重前 Top-5 与去重后 Top-5 交集为 4，并集为 6，则 J 为 0.67。</p>
+<h3>A.3 状态转移表</h3>
+<table>
+<thead>
+<tr>
+<th>当前状态</th>
+<th>允许进入</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>提出</td>
+<td>确认、取消</td>
+<td>任务刚被提及</td>
+</tr>
+<tr>
+<td>确认</td>
+<td>进行、阻塞、取消</td>
+<td>已明确要做</td>
+</tr>
+<tr>
+<td>进行</td>
+<td>阻塞、完成、取消</td>
+<td>正在执行</td>
+</tr>
+<tr>
+<td>阻塞</td>
+<td>进行、取消</td>
+<td>等待外部条件</td>
+</tr>
+<tr>
+<td>完成</td>
+<td>复活</td>
+<td>已交付</td>
+</tr>
+<tr>
+<td>取消</td>
+<td>复活</td>
+<td>明确不做</td>
+</tr>
+<tr>
+<td>复活</td>
+<td>进行、阻塞、取消</td>
+<td>重新开始</td>
+</tr>
+</tbody></table>
+<h3>A.4 50+50 对照集构建方法</h3>
+<ol>
+<li>从会议、群聊、任务描述三类记录中抽取任务提及，覆盖短、中、长三种长度。</li>
+<li>由两名成员独立判断每对提及是否同一任务，不一致的逐条讨论并记录理由。</li>
+<li>同一任务组与相似但不同组各保留五十组，组内提及不少于两条。</li>
+<li>对照集固定后不再修改；新增样例进入扩展集，单独报告结果。</li>
+<li>每组标注判定依据，至少包含动作、对象、责任人、时间四项中的三项。</li>
+</ol>
+<h3>A.5 合并记录模板</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>合并编号</td>
+<td>稳定编号</td>
+</tr>
+<tr>
+<td>涉及提及</td>
+<td>提及编号列表</td>
+</tr>
+<tr>
+<td>合并方式</td>
+<td>强键或评分</td>
+</tr>
+<tr>
+<td>评分与因素</td>
+<td>各因素取值与总分</td>
+</tr>
+<tr>
+<td>操作人</td>
+<td>自动或人工账号</td>
+</tr>
+<tr>
+<td>操作时间</td>
+<td>时间戳</td>
+</tr>
+<tr>
+<td>撤销状态</td>
+<td>未撤销或已撤销</td>
+</tr>
+</tbody></table>
+<h3>A.6 评估指标定义</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>错误合并率</td>
+<td>被错误合并的组数除以合并总组数</td>
+<td>不高于一成</td>
+</tr>
+<tr>
+<td>错误拆分率</td>
+<td>应合并而未合并的组数除以应合并组数</td>
+<td>不高于一成</td>
+</tr>
+<tr>
+<td>任务量偏差</td>
+<td>去重后与人工计数的相对偏差</td>
+<td>不高于两成</td>
+</tr>
+<tr>
+<td>确认工作量</td>
+<td>进入灰区的任务数除以任务总数</td>
+<td>越低越好，需与错误率权衡</td>
+</tr>
+</tbody></table>
+<h2>注释</h2>
+<ol>
+<li><strong>灰区：</strong> 评分处于“直接合并”与“不合并”之间的区间。落入灰区的记录不自动处理，必须由人工确认。</li>
+<li><strong>复活：</strong> 已完成或已取消的任务重新进入执行状态。复活需要记录原因与新的截止时间。</li>
+<li><strong>事件共指：</strong> 判断不同文本中的多次提及是否指向同一事件的处理任务，是自然语言处理中的常见问题。</li>
+<li><strong>时间窗：</strong> 判断两次提及是否可能属于同一任务的时间范围。本报告建议默认三十天，可按团队节奏调整。</li>
+<li><strong>状态机：</strong> 用状态与允许的转移描述对象生命周期的模型。状态机可以检查非法跳转并保留历史。</li>
+<li><strong>证据链：</strong> 合并任务与全部原始提及之间的可追溯关联。证据链只追加，不覆盖原始记录。</li>
+</ol>
+<h2>AI 使用说明</h2>
+<ul>
+<li>是否使用：是</li>
+<li>使用工具：Qoder</li>
+<li>参与环节：资料整理、结构与初稿撰写、图表生成与排版</li>
+<li>人工核验方式：待调研人 Dtao 核对来源、数据与结论</li>
+<li>本人确认：待调研人签署确认</li>
+</ul>
+
+</body>
+</html>
