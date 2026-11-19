@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>B-06 候选队列原型</title>
+<style>
+:root{--bg:#0d1117;--fg:#e6edf3;--mut:#8b949e;--line:#21262d;--accent:#2b6cb0;--ok:#2f855a;--warn:#b7791f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,"Microsoft YaHei",sans-serif}
+header{display:flex;gap:16px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+h1{font-size:16px;margin:0}
+.badge{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.wrap{display:grid;grid-template-columns:210px 1fr 280px;gap:0;min-height:calc(100vh - 46px)}
+aside{border-right:1px solid var(--line);padding:10px;overflow:auto;max-height:calc(100vh - 46px)}
+aside.right{border-left:1px solid var(--line);border-right:0}
+.q{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);padding:6px 8px;border-radius:6px;cursor:pointer;font:13px/1.4 inherit}
+.q:hover{background:#161b22}
+.q.on{background:#1f6feb33;outline:1px solid #1f6feb66}
+.q .k{color:var(--mut);font-size:11px}
+main{padding:16px 20px;overflow:auto}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:#11161d}
+.prev{color:var(--mut);font-size:13px;border-left:2px solid #30363d;padding-left:8px;margin-bottom:8px}
+.msg{font-size:15px;background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:10px}
+mark{background:#b7791f55;color:#ffd479;padding:0 2px;border-radius:3px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+button.o{background:#161b22;border:1px solid #30363d;color:var(--fg);padding:7px 12px;border-radius:8px;cursor:pointer}
+button.o:hover{border-color:#8b949e}
+button.o.primary{background:var(--ok);border-color:var(--ok)}
+button.o.warn{background:#7c2d12;border-color:#7c2d12}
+.pbtn{min-width:56px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:6px;margin-top:8px}
+.tiny{font-size:12px;color:var(--mut)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--mut)}
+.log{font:12px/1.5 ui-monospace,monospace;color:#9fb3c8;max-height:220px;overflow:auto;background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:8px}
+footer{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.timer{font-variant-numeric:tabular-nums}
+</style></head><body>
+<header>
+  <h1>B-06 候选队列 · 交互原型</h1>
+  <span class="badge" id="pos">1 / 1</span>
+  <span class="badge">队列 11 条 / 全部 138 条提及</span>
+  <span class="badge timer" id="rate">本分钟 0 条</span>
+  <span class="badge" id="cost">每 100 条确认 0 次</span>
+  <span class="badge" id="hint">快捷键：1–6 选人，U 撤销，S 拆分，M 标同名</span>
+</header>
+<div class="wrap">
+  <aside id="queue"></aside>
+  <main>
+    <div class="card">
+      <div class="row tiny" style="margin-bottom:8px">
+        <span id="meta"></span>
+      </div>
+      <div class="prev" id="prev"></div>
+      <div class="msg" id="msg"></div>
+      <div class="row" style="margin-top:12px"><b id="ask">这条提及指的是谁？</b></div>
+      <div class="grid" id="people"></div>
+      <div class="opts" id="acts"></div>
+    </div>
+    <div class="card" id="splitBox" style="display:none">
+      <b>拆分：这一处其实指两个人？</b>
+      <div class="tiny">选择第二个目标，日志会记一条 split（原合并作废，新增两条）</div>
+      <div class="grid" id="splitPeople"></div>
+    </div>
+  </main>
+  <aside class="right">
+    <div class="tiny" style="margin-bottom:6px">人物卡（点人看详情）</div>
+    <div id="personCard" class="card" style="font-size:13px">未选择</div>
+    <div class="tiny" style="margin:14px 0 6px">操作日志（与 b06_merge.py 同格式）</div>
+    <div class="log" id="log"></div>
+  </aside>
+</div>
+<footer>
+  <button class="o" id="prevBtn">← 上一条</button>
+  <button class="o" id="nextBtn">下一条 →</button>
+  <button class="o" id="undoBtn">撤销上一步 (U)</button>
+  <button class="o" id="exportBtn">导出日志 JSONL</button>
+  <button class="o" id="showBtn" style="background:#2b6cb0;border-color:#2b6cb0">显示我的答案（复制给我）</button>
+  <button class="o" id="resetBtn">清空</button>
+</footer>
+<script>
+const DATA = {"items": [{"cid": "M0010", "rid": "R-102", "mi": 5, "surface": "主持人", "kind": "role", "msg": "P01: 第五点：主持稿是否已经发给办公室的相关人员？他们能出的主持人是谁？需要相对应地进行对接", "prev": "P01: 第四点：需要有一个人安排志愿者相关事宜，与志愿站进行对接，以及进行志愿者培训", "status": "ambiguous", "targets": ["P01"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0016", "rid": "R-104", "mi": 0, "surface": "主持人", "kind": "role", "msg": "P02: 主持稿我等一下发给办公室，他们和我说他们可以出主持人", "prev": "", "status": "ambiguous", "targets": ["P01", "P02"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0020", "rid": "R-104", "mi": 6, "surface": "主持人", "kind": "role", "msg": "P02: 办公室：出两个主持人，可以七点15分左右到", "prev": "P02: 运营组：出一个人拍照，7点20分左右到就好了", "status": "ambiguous", "targets": ["P01", "P02"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0041", "rid": "R-109", "mi": 13, "surface": "负责人", "kind": "role", "msg": "P02: 主要负责人，那个群让我们去问，我们指导老师", "prev": "P03: 别这样", "status": "ambiguous", "targets": ["P02", "P03", "P04", "P06"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0055", "rid": "R-112", "mi": 7, "surface": "队长", "kind": "role", "msg": "P01: 2. 每个队长去和自己的小队伍沟通，看哪个时间比较合适，再确定在后面。", "prev": "P01: 1. 我们直接拍板具体的时间。", "status": "ambiguous", "targets": ["P01", "P02"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0057", "rid": "R-112", "mi": 8, "surface": "队长", "kind": "role", "msg": "P01: 时间不一定非得是下周，最好能在 11 月结束前处理掉；如果不行的话，往后推也行。主要是看大家在那段时间有没有空，不要撞上期中考或期末考。另外，每个队长去安抚一下队员，或者做一下思想工作。", "prev": "P01: 2. 每个队长去和自己的小队伍沟通，看哪个时间比较合适，再确定在后面。", "status": "ambiguous", "targets": ["P01", "P02"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0078", "rid": "R-116", "mi": 29, "surface": "负责人", "kind": "role", "msg": "P01: 我部门综合事务负责人去对接一下", "prev": "P07: [小程序] 某户外烧烤营地", "status": "ambiguous", "targets": ["P01", "P07", "P08", "P12", "P13"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0101", "rid": "R-123", "mi": 0, "surface": "负责人", "kind": "role", "msg": "P15: 你在收集每个部门有空的时间呗。那等其他我们几个负责人回你看看吧。我们没啥大型活动吧，估计周四周末都可以，到时候定好时间我们直接发通知群就好了", "prev": "", "status": "ambiguous", "targets": ["P01", "P15"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0106", "rid": "R-124", "mi": 1, "surface": "评委", "kind": "role", "msg": "P04: 评委", "prev": "P04: @🦈 24某专业P18 24某专业P19 24某专业P20", "status": "ambiguous", "targets": ["P18", "P19", "P20"], "conf": 0.4, "rule": "R5", "why": "这个职务对应多个人，必须问人（已收窄到本记录出现的人）"}, {"cid": "M0110", "rid": "R-125", "mi": 0, "surface": "对接人", "kind": "role", "msg": "P01: @P06 你来作为辩论队的对接人吧～", "prev": "", "status": "ambiguous", "targets": ["P01", "P05", "P06", "P15"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}, {"cid": "M0130", "rid": "R-128", "mi": 7, "surface": "负责人", "kind": "role", "msg": "P01: 我部门的综合事务负责人", "prev": "P02: 我们部门吗", "status": "ambiguous", "targets": ["P01", "P02", "P15"], "conf": 0.3, "rule": "R5+F3", "why": "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人"}], "persons": [{"id": "P01", "label": "P01", "aliases": ["霹雳马桶", "老板"], "seen": 11}, {"id": "P02", "label": "P02", "aliases": [], "seen": 8}, {"id": "P03", "label": "P03", "aliases": [], "seen": 1}, {"id": "P04", "label": "P04", "aliases": [], "seen": 2}, {"id": "P05", "label": "P05", "aliases": [], "seen": 2}, {"id": "P06", "label": "P06", "aliases": ["随便啦"], "seen": 11}, {"id": "P07", "label": "P07", "aliases": [], "seen": 3}, {"id": "P08", "label": "P08", "aliases": [], "seen": 1}, {"id": "P09", "label": "P09", "aliases": [], "seen": 0}, {"id": "P10", "label": "P10", "aliases": [], "seen": 0}, {"id": "P11", "label": "P11", "aliases": [], "seen": 0}, {"id": "P12", "label": "P12", "aliases": [], "seen": 1}, {"id": "P13", "label": "P13", "aliases": [], "seen": 1}, {"id": "P14", "label": "P14", "aliases": [], "seen": 1}, {"id": "P15", "label": "P15", "aliases": ["Eli霖"], "seen": 3}, {"id": "P17", "label": "P17", "aliases": ["展铭师兄", "师兄A"], "seen": 2}, {"id": "P18", "label": "P18", "aliases": ["评委", "老师"], "seen": 3}, {"id": "P19", "label": "P19", "aliases": ["评委"], "seen": 2}, {"id": "P20", "label": "P20", "aliases": ["评委"], "seen": 2}, {"id": "EXT-老师A", "label": "EXT-老师A", "aliases": ["老师A", "田姐", "老师"], "seen": 8}, {"id": "D-志愿站", "label": "志愿站", "aliases": ["志愿站"], "seen": 3}, {"id": "D-办公室", "label": "办公室", "aliases": ["办公室"], "seen": 13}, {"id": "D-运营组", "label": "运营组", "aliases": ["运营组"], "seen": 2}, {"id": "D-技术组", "label": "技术组", "aliases": ["技术组"], "seen": 7}, {"id": "D-自律部", "label": "自律部", "aliases": ["自律部"], "seen": 5}, {"id": "D-外联", "label": "外联部", "aliases": ["外联部", "外联"], "seen": 5}, {"id": "EXT-老师（未定）", "label": "老师（外部）", "aliases": ["老师"], "seen": 14}, {"id": "not_person", "label": "不是人", "aliases": [], "seen": 0}, {"id": "unknown", "label": "判不出", "aliases": [], "seen": 0}], "totalMentions": 138, "needHuman": 11};
+const ITEMS = DATA.items, PERSONS = DATA.persons;
+const KEY = "b06_proto_v1";
+let ans = JSON.parse(localStorage.getItem(KEY) || "{}");
+let log = JSON.parse(localStorage.getItem(KEY + "_log") || "[]");
+let ops = log.length ? Math.max(...log.map(o => parseInt((o.op_id||"OP-0").slice(3)) || 0)) : 0;
+let idx = 0, lastKey = performance.now(), minuteStart = Date.now(), minuteDone = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const cur = () => ITEMS[idx];
+const ck = it => it.rid + "|" + it.mi + "|" + it.surface;
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(ans));
+  localStorage.setItem(KEY + "_log", JSON.stringify(log));
+}
+
+function nextOp() { ops += 1; return "OP-" + String(ops).padStart(4, "0"); }
+
+function addOp(action, extra) {
+  const it = cur();
+  const op = Object.assign({
+    op_id: nextOp(), action, mention_id: it.cid, rule: "proto", evidence: it.why || "",
+    by: "0002", ts: new Date().toISOString(),
+  }, extra || {});
+  log.push(op); save(); renderLog();
+  return op;
+}
+
+function renderLog() {
+  $("log").textContent = log.length ? log.map(o => `${o.op_id} ${o.action} ${o.mention_id}${o.to ? " → " + o.to : ""}${o.note ? " ｜" + o.note : ""}${o.undo_of ? " (撤销 " + o.undo_of + ")" : ""}`).join("\n") : "（空）";
+}
+
+function rate() {
+  const now = Date.now();
+  if (now - minuteStart > 60000) { minuteStart = now; minuteDone = 0; }
+  $("rate").textContent = "本分钟 " + minuteDone + " 条";
+  const done = Object.keys(ans).length;
+  const per100 = done ? (log.filter(o => o.action === "merge").length / done * 100) : 0;
+  $("cost").textContent = "每 100 条确认 " + per100.toFixed(1) + " 次（验收 ≤10）";
+}
+setInterval(rate, 1000);
+
+function renderQueue() {
+  $("queue").innerHTML = ITEMS.map((it, i) => {
+    const a = ans[ck(it)];
+    return `<button class="q ${i===idx?'on':''}" data-i="${i}">
+      <div>${a ? "✅ " : ""}${esc(it.surface)}</div>
+      <div class="k">${it.rid} · 第${it.mi}条 · ${esc(it.rule)}</div></button>`;
+  }).join("");
+  [...$("queue").querySelectorAll(".q")].forEach(b => b.onclick = () => { idx = +b.dataset.i; render(); });
+}
+
+function renderPeople(box, cb) {
+  box.innerHTML = PERSONS.slice(0, 30).map(p =>
+    `<button class="o pbtn" data-p="${p.id}">${esc(p.label)}</button>`).join("");
+  [...box.querySelectorAll("[data-p]")].forEach(b => b.onclick = () => cb(b.dataset.p));
+}
+
+function renderPersonCard(pid) {
+  const p = PERSONS.find(x => x.id === pid);
+  if (!p) { $("personCard").textContent = "未找到 " + pid; return; }
+  $("personCard").innerHTML = `<b>${esc(p.label)}</b> <span class="tiny">${esc(p.id)}</span>
+    <div class="tiny" style="margin-top:6px">别名：${p.aliases.length ? p.aliases.map(esc).join("、") : "（无）"}</div>
+    <div class="tiny">在候选里出现：${p.seen} 次</div>`;
+}
+
+function render() {
+  const it = cur(), a = ans[ck(it)];
+  $("pos").textContent = (idx + 1) + " / " + ITEMS.length;
+  $("meta").innerHTML = `<span class="pill">${esc(it.rid)} 第 ${it.mi} 条</span>
+    <span class="pill">类型 ${esc(it.kind)}</span>
+    <span class="pill">机器：${esc(it.status)}${it.targets.length ? " → " + it.targets.map(esc).join(",") : ""}（${it.conf}）</span>
+    <span class="pill">规则 ${esc(it.rule)}</span>`;
+  $("prev").textContent = it.prev ? "上一条：" + it.prev : "";
+  const m = it.msg, s = it.surface, i = m.indexOf(s);
+  $("msg").innerHTML = i >= 0
+    ? esc(m.slice(0, i)) + "<mark>" + esc(s) + "</mark>" + esc(m.slice(i + s.length))
+    : esc(m);
+  $("ask").textContent = `「${it.surface}」指的是谁？` + (a ? `（已选：${esc(a.target)}，点别的可以改）` : "");
+  renderPeople($("people"), pick);
+  $("acts").innerHTML = `
+    <button class="o warn" data-act="notperson">不是人（泛指/口号/地点）</button>
+    <button class="o warn" data-act="unknown">判不出来</button>
+    <button class="o" data-act="split">拆分（S）</button>
+    <button class="o" data-act="same">标为同一人（M）</button>`;
+  [...$("acts").querySelectorAll("[data-act]")].forEach(b => b.onclick = () => doAct(b.dataset.act));
+  renderQueue(); renderLog(); rate();
+}
+
+function pick(pid) {
+  ans[ck(cur())] = { target: pid };
+  addOp("merge", { to: pid, note: "人工确认" });
+  minuteDone += 1;
+  save(); advance();
+}
+
+function doAct(act) {
+  if (act === "split") { $("splitBox").style.display = "block"; renderPeople($("splitPeople"), p => {
+      addOp("split", { to: p, note: "拆成两个目标" });
+      ans[ck(cur())] = { target: "SPLIT" }; $("splitBox").style.display = "none"; minuteDone += 1; save(); advance();
+    }); return; }
+  if (act === "same") {
+    const other = prompt("要标记为与哪个人同一人？（输入编号，如 P03）");
+    if (!other) return;
+    addOp("merge", { to: other, note: "标记同名" });
+    ans[ck(cur())] = { target: other }; minuteDone += 1; save(); advance(); return;
+  }
+  ans[ck(cur())] = { target: act === "notperson" ? "not_person" : "unknown" };
+  addOp("merge", { to: act === "notperson" ? "not_person" : "unknown", note: "人工改判" });
+  minuteDone += 1; save(); advance();
+}
+
+function undo() {
+  if (!log.length) return;
+  const last = log[log.length - 1];
+  if (last.action === "undo") return;
+  log.push({ op_id: nextOp(), action: "undo", mention_id: last.mention_id,
+             undo_of: last.op_id, rule: "proto", by: "0002", ts: new Date().toISOString() });
+  delete ans[last.mention_id.split("|")[0] + "|" + last.mention_id.split("|")[1] + "|" + last.mention_id.split("|")[2]];
+  save(); render(); 
+}
+
+function advance() { if (idx < ITEMS.length - 1) idx += 1; render(); }
+
+// —— 绑定 ——
+$("prevBtn").onclick = () => { if (idx > 0) idx -= 1; render(); };
+$("nextBtn").onclick = () => { if (idx < ITEMS.length - 1) idx += 1; render(); };
+$("undoBtn").onclick = undo;
+$("resetBtn").onclick = () => { if (confirm("清空全部答案与日志？")) { ans = {}; log = []; ops = 0; save(); render(); } };
+$("exportBtn").onclick = () => {
+  const blob = new Blob([log.map(o => JSON.stringify(o)).join("\n") + "\n"], { type: "application/jsonl" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "b06-merge-log-0002.jsonl"; a.click();
+};
+$("showBtn").onclick = () => {
+  const rows = ITEMS.map((it, i) => {
+    const a = ans[ck(it)];
+    return `第${i + 1}条 ${it.rid}#${it.mi} 「${it.surface}」 → ${a ? a.target : "（未选）"}`;
+  }).join("\n");
+  const pre = document.createElement("pre");
+  pre.style.cssText = "white-space:pre-wrap;padding:18px;font:14px/2 monospace";
+  pre.textContent = rows + "\n\n（全选这段文字发给我即可）";
+  document.body.innerHTML = ""; document.body.appendChild(pre);
+};
+document.addEventListener("keydown", e => {
+  if (e.key === "u" || e.key === "U") return undo();
+  if (e.key === "s" || e.key === "S") return doAct("split");
+  if (e.key === "m" || e.key === "M") return doAct("same");
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 9) { const p = PERSONS[n - 1]; if (p) pick(p.id); }
+});
+
+if (location.hash === "#reset") { localStorage.removeItem(KEY); localStorage.removeItem(KEY + "_log"); ans = {}; log = []; }
+render();
+</script></body></html>
