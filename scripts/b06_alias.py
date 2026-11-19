@@ -13,6 +13,7 @@
   R3 部门/职能  `志愿站` `办公室` …          → **外部单位**实体（ADR-0007），置信 0.9（不是人，不许硬塞给人）
   R4 代词       `他们` `她` `大家`            → **不解析到人**，只记 `deferred`（实测就近解析 0/41 正确）
   R5 歧义职务   `评委` `主持人` `队长`       → 候选集合，必须问人（needs_human）
+  R6 泛称外部人 `老师`                      → 记为「某个外部人」，不追具体哪位（v0.6：26 条实测全部指向外部人，其中 16 田姐 / 10 其他老师）
 
 输出：
   data/samples/B-06-alias-dictionary.json   词典（人物、群体、职务、已文档化的别名事实）
@@ -73,8 +74,10 @@ DICTIONARY = {
         "D-外联": {"surface": ["外联部", "外联"], "kind": "department"},
     },
     "roles_fixed": {"老师A": "EXT-老师A", "田姐": "EXT-老师A", "师兄A": "P17", "展铭师兄": "P17"},
+    # 泛称：确定是「外部的人」，但不追具体是哪位。外部人不入人—人图（ADR-0007），
+    # 所以「具体哪位」对负载/单点/割点都没有影响，不必逐条问人。
+    "roles_generic_external": {"老师": "EXT-老师（未定）"},
     "roles_ambiguous": {
-        "老师": ["EXT-老师A", "P18"],
         "评委": ["P18", "P19", "P20"],
         "队长": "unknown",
         "主持人": "unknown",
@@ -130,6 +133,10 @@ def decide(m, prev_mention, text):
             tgt = DICTIONARY["roles_fixed"][surface]
             st = "external_person" if tgt.startswith("EXT-") else "resolved"
             return (st, [tgt], 0.9, "R2", False, "专名职务，词典里有固定映射")
+        gen = DICTIONARY["roles_generic_external"].get(surface)
+        if gen:
+            return ("external_person", [gen], 0.8, "R6", False,
+                    "泛称职务：确定是外部人；具体哪位取决于上下文，不影响产品（外部人不入人图，ADR-0007）")
         cand = DICTIONARY["roles_ambiguous"].get(surface)
         if isinstance(cand, list):
             return ("ambiguous", cand, 0.4, "R5", True, "这个职务对应多个人，必须问人")
