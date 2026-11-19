@@ -29,6 +29,8 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import b06_candidates  # noqa: E402  F1 相似 / F2 同音 / F3 共现
 SAMPLES = ROOT / "data" / "samples"
 MENTIONS = SAMPLES / "B-06-mentions.jsonl"
 RECORDS = SAMPLES / "B-04-real-records.jsonl"
@@ -159,8 +161,12 @@ def decide(m, prev_mention, text):
         if isinstance(cand, str) and cand.startswith("P"):
             return ("resolved", [cand], 0.7, "R5", True, "职务唯一但仍是推断")
         if local:
-            return ("ambiguous", local, 0.3, "R5", True,
-                    "这个职务没有固定映射；候选只能取本记录里出现过的人，必须问人")
+            # 用 F1/F2/F3 给本记录内的人排序（F1/F2 需要别名词表，已脱敏语料里为空；
+            # F3 只作排序信号）。排序结果仍标 ambiguous + 必须人看。
+            ranked = [c["target"] for c in b06_candidates.suggest(surface, persons=local)]
+            ordered = ranked + [p for p in local if p not in ranked]
+            return ("ambiguous", ordered, 0.3, "R5+F3", True,
+                    "这个职务没有固定映射；候选只能取本记录里出现过的人，按共现等弱信号排序，必须问人")
         return ("unknown", [], 0.2, "R5", True, "这个职务在本记录里没有可定的人")
     if kind == "pronoun":
         # 实测：就近取人名的解析 41 条全错（人判全部不是具体人）。因此不再猜人，
