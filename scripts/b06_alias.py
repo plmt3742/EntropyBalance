@@ -10,8 +10,8 @@
 规则（每条都写清楚，便于复核）：
   R1 显式编号   正文 `P07` / `@P06`          → 直接定，置信 0.95
   R2 专名职务   `老师A` `师兄A`              → 查词典的固定映射，置信 0.9
-  R3 部门/职能  `志愿站` `办公室` …          → 群体实体，置信 0.8（不是人，不许硬塞给人）
-  R4 代词就近   同一消息内向前找最近的人名   → 置信 0.6；跨消息 0.3；找不到 → 未定
+  R3 部门/职能  `志愿站` `办公室` …          → **外部单位**实体（ADR-0007），置信 0.9（不是人，不许硬塞给人）
+  R4 代词       `他们` `她` `大家`            → **不解析到人**，只记 `deferred`（实测就近解析 0/41 正确）
   R5 歧义职务   `评委` `主持人` `队长`       → 候选集合，必须问人（needs_human）
 
 输出：
@@ -119,16 +119,17 @@ def decide(m, prev_mention, text):
     if kind == "at_all":
         return ("group", ["ALL"], 0.9, "R1", False, "@所有人 是广播，不是某个人")
     if kind == "department":
-        gid = None
+        uid = None
         for g, spec in DICTIONARY["groups"].items():
             if surface in spec["surface"]:
-                gid = g
-        return ("group", [gid], 0.8, "R3", True,
-                "部门是群体实体；除非这句话能定到具体的人，否则不许硬塞给人")
+                uid = "EXT-" + spec["surface"][0]
+        return ("external_unit", [uid], 0.9, "R3", False,
+                "部门是与本队平级的外部单位（ADR-0007）：不入人—人图，只回答「我们在等谁」")
     if kind == "role":
         if surface in DICTIONARY["roles_fixed"]:
-            return ("resolved", [DICTIONARY["roles_fixed"][surface]], 0.9, "R2", False,
-                    "专名职务，词典里有固定映射")
+            tgt = DICTIONARY["roles_fixed"][surface]
+            st = "external_person" if tgt.startswith("EXT-") else "resolved"
+            return (st, [tgt], 0.9, "R2", False, "专名职务，词典里有固定映射")
         cand = DICTIONARY["roles_ambiguous"].get(surface)
         if isinstance(cand, list):
             return ("ambiguous", cand, 0.4, "R5", True, "这个职务对应多个人，必须问人")
@@ -136,13 +137,10 @@ def decide(m, prev_mention, text):
             return ("resolved", [cand], 0.7, "R5", True, "职务唯一但仍是推断")
         return ("unknown", [], 0.2, "R5", True, "这个职务在本批数据里没有可定的人")
     if kind == "pronoun":
-        pid, why = nearest_person_before(text, m["span_start"])
-        if pid:
-            dist = m["span_start"] - text.rfind(pid, 0, m["span_start"]) - len(pid)
-            conf = 0.6 if dist <= 120 else 0.35
-            return ("guessed", [pid], conf, "R4", True,
-                    f"代词就近指代（{why}，距离 {dist} 字符）——必须人确认")
-        return ("unknown", [], 0.1, "R4", True, "整段上文都没有人名，代词指谁不可判")
+        # 实测：就近取人名的解析 41 条全错（人判全部不是具体人）。因此不再猜人，
+        # 只保留「这里出现了一个代词」这个事实，交给记录级的上下文/话题延续去用。
+        return ("deferred", [], 0.0, "R4", False,
+                "代词只作话题延续信号，不解析到人（就近解析实测 0/41 正确）")
     return ("unknown", [], 0.0, "R0", True, "未知类型")
 
 
@@ -165,7 +163,7 @@ def main() -> int:
             "kind": m["kind"],
             "surface": m["surface"],
             "context": m["context"],
-            "status": status,          # resolved / group / guessed / ambiguous / unknown
+            "status": status,          # resolved / external_person / external_unit / group / deferred / ambiguous / unknown
             "targets": targets,
             "confidence": conf,
             "rule": rule,
@@ -181,9 +179,12 @@ def main() -> int:
     guess = sum(1 for r in out if r["status"] == "guessed")
     amb = sum(1 for r in out if r["status"] == "ambiguous")
     unk = sum(1 for r in out if r["status"] == "unknown")
+    extu = sum(1 for r in out if r["status"] == "external_unit")
+    extp = sum(1 for r in out if r["status"] == "external_person")
+    defer = sum(1 for r in out if r["status"] == "deferred")
     human = sum(1 for r in out if r["needs_human"])
     print(f"提及 {total} 条")
-    print(f"  直接定 {resolved} / 群体 {group} / 推断 {guess} / 歧义 {amb} / 未定 {unk}")
+    print(f"  人 {resolved} / 外部个人 {extp} / 外部单位 {extu} / 群体 {group} / 延迟到上下文 {defer} / 歧义 {amb} / 未定 {unk}")
     print(f"  需要人确认 {human} 条 = {human/total*100:.1f}%（验收要求 ≤10% 是「每 100 条提及确认次数」的另一算法，见 findings）")
     print("  按规则：", dict(sorted((k[0], v) for k, v in stat.items() if k[0].startswith("R"))))
     print("输出：", CAND_OUT)
