@@ -1,0 +1,19 @@
+{"record_id": "X-02", "message_index": 0, "author": "P03", "kind": "pronoun", "surface": "他", "span_start": 8, "span_end": 9, "context": "P03: 张伟说他来搬桌子\nP04: 张玮"}
+{"record_id": "X-03", "message_index": 0, "author": "P05", "kind": "person_id", "surface": "P07", "span_start": 8, "span_end": 11, "context": "P05: 小张（P07）你明天把名单发群里\nP"}
+{"record_id": "X-04", "message_index": 0, "author": "P01", "kind": "department", "surface": "办公室", "span_start": 8, "span_end": 11, "context": "P01: 已经跟办公室对过了\nP02: 他们说"}
+{"record_id": "X-04", "message_index": 1, "author": "P02", "kind": "pronoun", "surface": "他们", "span_start": 20, "span_end": 22, "context": "办公室对过了\nP02: 他们说可以出两个主持人\nP0"}
+{"record_id": "X-04", "message_index": 1, "author": "P02", "kind": "role", "surface": "主持人", "span_start": 28, "span_end": 31, "context": "02: 他们说可以出两个主持人\nP01: 那就定他们"}
+{"record_id": "X-04", "message_index": 2, "author": "P01", "kind": "pronoun", "surface": "他们", "span_start": 40, "span_end": 42, "context": "主持人\nP01: 那就定他们"}
+{"record_id": "X-05", "message_index": 0, "author": "P01", "kind": "role", "surface": "队长", "span_start": 5, "span_end": 7, "context": "P01: 队长说场地先别定\nP02: "}
+{"record_id": "X-05", "message_index": 1, "author": "P02", "kind": "role", "surface": "队长", "span_start": 21, "span_end": 23, "context": "地先别定\nP02: 哪个队长？正队还是副队\nP01:"}
+{"record_id": "X-06", "message_index": 0, "author": "P03", "kind": "role", "surface": "评委", "span_start": 5, "span_end": 7, "context": "P03: 评委那边要名单\nP04: 三"}
+{"record_id": "X-06", "message_index": 1, "author": "P04", "kind": "role", "surface": "评委", "span_start": 20, "span_end": 22, "context": "边要名单\nP04: 三个评委都要吗"}
+{"record_id": "X-07", "message_index": 0, "author": "P02", "kind": "role", "surface": "老师", "span_start": 5, "span_end": 7, "context": "P02: 老师说要提前半小时到场\nP0"}
+{"record_id": "X-07", "message_index": 1, "author": "P02", "kind": "role", "surface": "老师", "span_start": 24, "span_end": 26, "context": "小时到场\nP02: 我跟老师确认过了"}
+{"record_id": "X-08", "message_index": 0, "author": "P01", "kind": "department", "surface": "办公室", "span_start": 5, "span_end": 8, "context": "P01: 办公室能出两个主持人\nP02:"}
+{"record_id": "X-08", "message_index": 0, "author": "P01", "kind": "role", "surface": "主持人", "span_start": 12, "span_end": 15, "context": "P01: 办公室能出两个主持人\nP02: 那我去跟办公"}
+{"record_id": "X-08", "message_index": 1, "author": "P02", "kind": "department", "surface": "办公室", "span_start": 25, "span_end": 28, "context": "持人\nP02: 那我去跟办公室对接"}
+{"record_id": "X-09", "message_index": 0, "author": "P01", "kind": "at_all", "surface": "@所有人", "span_start": 5, "span_end": 9, "context": "P01: @所有人 明晚七点开会\nP02:"}
+{"record_id": "X-09", "message_index": 1, "author": "P02", "kind": "at_person", "surface": "@P06", "span_start": 22, "span_end": 26, "context": "明晚七点开会\nP02: @P06 你把麦克风带上"}
+{"record_id": "X-10", "message_index": 1, "author": "P02", "kind": "person_id", "surface": "P01", "span_start": 39, "span_end": 42, "context": "P02: 正确的写法是 P01、P10"}
+{"record_id": "X-10", "message_index": 1, "author": "P02", "kind": "person_id", "surface": "P10", "span_start": 43, "span_end": 46, "context": " 正确的写法是 P01、P10"}

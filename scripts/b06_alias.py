@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -89,6 +90,7 @@ DICTIONARY = {
 }
 
 NAME_RE = re.compile(r"(?<![A-Za-z0-9])P\d{2}(?!\d)")
+AUTHOR_RE = re.compile(r"^(P\d{2})\s*[:：]")
 
 
 def load_mentions():
@@ -98,6 +100,17 @@ def load_mentions():
 def load_texts():
     rows = [json.loads(l) for l in RECORDS.read_text(encoding="utf-8").splitlines() if l.strip()]
     return {r["record"]["record_id"]: r["text"] for r in rows}
+
+
+def record_persons(text: str):
+    """这条记录里真实出现过的人物编号（正文编号 + 发言人）。用来给「职务」类提及生成候选——
+    候选必须来自本记录，不能拿全局词典里的名单硬套（对抗测试 X-06 发现的缺陷）。"""
+    ids = {m.group(0) for m in NAME_RE.finditer(text)}
+    for line in text.split("\n"):
+        a = AUTHOR_RE.match(line)
+        if a:
+            ids.add(a.group(1))
+    return sorted(ids)
 
 
 def nearest_person_before(text: str, pos: int, limit: int = 400):
@@ -138,11 +151,17 @@ def decide(m, prev_mention, text):
             return ("external_person", [gen], 0.8, "R6", False,
                     "泛称职务：确定是外部人；具体哪位取决于上下文，不影响产品（外部人不入人图，ADR-0007）")
         cand = DICTIONARY["roles_ambiguous"].get(surface)
+        local = record_persons(text)
         if isinstance(cand, list):
-            return ("ambiguous", cand, 0.4, "R5", True, "这个职务对应多个人，必须问人")
+            hits = [p for p in cand if p in local]
+            return ("ambiguous", hits or cand, 0.4, "R5", True,
+                    "这个职务对应多个人，必须问人" + ("（已收窄到本记录出现的人）" if hits else ""))
         if isinstance(cand, str) and cand.startswith("P"):
             return ("resolved", [cand], 0.7, "R5", True, "职务唯一但仍是推断")
-        return ("unknown", [], 0.2, "R5", True, "这个职务在本批数据里没有可定的人")
+        if local:
+            return ("ambiguous", local, 0.3, "R5", True,
+                    "这个职务没有固定映射；候选只能取本记录里出现过的人，必须问人")
+        return ("unknown", [], 0.2, "R5", True, "这个职务在本记录里没有可定的人")
     if kind == "pronoun":
         # 实测：就近取人名的解析 41 条全错（人判全部不是具体人）。因此不再猜人，
         # 只保留「这里出现了一个代词」这个事实，交给记录级的上下文/话题延续去用。
@@ -152,6 +171,10 @@ def decide(m, prev_mention, text):
 
 
 def main() -> int:
+    argv = sys.argv[1:]
+    for flag, name in (("--records", "RECORDS"), ("--mentions", "MENTIONS"), ("--cand-out", "CAND_OUT")):
+        if flag in argv:
+            globals()[name] = Path(argv[argv.index(flag) + 1])
     mentions = load_mentions()
     texts = load_texts()
     DICT_OUT.write_text(json.dumps(DICTIONARY, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

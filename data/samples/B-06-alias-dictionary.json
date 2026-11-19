@@ -1,5 +1,5 @@
 {
-  "version": "0.3",
+  "version": "0.1",
   "note": "人物编号与称呼的事实来源：data/samples/SOURCE.md §3 脱敏映射表、§5.1 跨群同一人。",
   "persons": {
     "P01": {

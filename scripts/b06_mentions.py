@@ -83,6 +83,11 @@ def mentions_in_line(line: str, base: int):
 
 
 def main() -> int:
+    argv = sys.argv[1:]
+    if "--records" in argv:
+        globals()["RECORDS"] = Path(argv[argv.index("--records") + 1])
+    if "--out" in argv:
+        globals()["OUT"] = Path(argv[argv.index("--out") + 1])
     if not RECORDS.exists():
         print("缺记录文件：", RECORDS, file=sys.stderr)
         return 2
